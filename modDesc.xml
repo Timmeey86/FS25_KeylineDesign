@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<modDesc descVersion="99" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/NMC-TBone/xml-schema/main/modDesc.xsd">
+    <author>Farmsim Tim</author>
+    <version>0.0.0.1</version>
+    <title>
+        <en>Keyline Design</en>
+    </title>
+    <description>
+<en><![CDATA[TODO]]></en>
+    </description>
+    <iconFilename>icon_KeylineDesign.dds</iconFilename>
+    <multiplayer supported="true" />
+    <extraSourceFiles>
+        <sourceFile filename="scripts/KeylineDesign.lua" />
+        <sourceFile filename="scripts/KeylineCalculation.lua" />
+        <sourceFile filename="scripts/ConstructionBrushKeyline.lua" />
+        <sourceFile filename="scripts/ConstructionBrushParallelLines.lua" />
+    </extraSourceFiles>
+</modDesc>
