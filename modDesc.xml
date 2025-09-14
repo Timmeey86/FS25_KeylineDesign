@@ -13,6 +13,7 @@
     <extraSourceFiles>
         <sourceFile filename="scripts/KeylineDesign.lua" />
         <sourceFile filename="scripts/KeylineCalculation.lua" />
+        <sourceFile filename="scripts/ParallelCurveCalculation.lua" />
         <sourceFile filename="scripts/ConstructionBrushKeyline.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLines.lua" />
     </extraSourceFiles>
