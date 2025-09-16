@@ -19,6 +19,7 @@ function ConstructionBrushParallelLines.new(subclass_mt, cursor)
 	self.angle = 0
 	self.coords = {}
 	self.keylines = {}
+	self.settings = ConstructionBrushParallelLinesSettings.getInstance()
 	return self
 end
 
@@ -115,8 +116,8 @@ function ConstructionBrushParallelLines:updateKeyline()
 	local x, y, z = self.cursor:getHitTerrainPosition()
 	self.keylines = {}
 	if x ~= nil then
-		local pointDistance = 1
-		local pointAmount = 500
+		local pointDistance = self.settings.resolution
+		local pointAmount = self.settings.length
 		local initialXDir, initialZDir = MathUtil.getDirectionFromYRotation(self.angle * math.pi / 180)
 
 		-- Get the central keyline first
@@ -135,7 +136,7 @@ function ConstructionBrushParallelLines:calculateParallelCurves()
 	-- Most of these will have to be configuration options at some point
 	local numLinesLeftOfKeyline = 7
 	local numLinesRightOfKeyline = 7
-	local parallelDistance = 18 + 6 -- 18m tramline + 6m inter-row spacing
+	local parallelDistance = self.settings.stripWidth + 2 * self.brushRadius
 	if #self.keylines > 0 then
 
 		-- Get lines to the left of the main direction
@@ -191,11 +192,10 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 		self.lastX = nil
 		return
 	else
-		local treeSpacing = 10
 		if #self.coords > 0 then
 			for _, coordList in ipairs(self.coords) do
-				-- Convert the list into a list of equidistant spacing (currently a fixed length of 1 meter)
-				local spacedList = ParallelCurveCalculation.getEquidistantPoints(coordList, 1)
+				-- Convert the list into a list of equidistant spacing
+				local spacedList = ParallelCurveCalculation.getEquidistantPoints(coordList, self.settings.resolution)
 				for i = 1, #spacedList do
 					local coord = spacedList[i]
 					if math.abs(coord.x) >= g_currentMission.terrainSize/2 or math.abs(coord.z) >= g_currentMission.terrainSize/2 then
@@ -208,10 +208,26 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 							-- paint the ground
 							local requestLandscaping = LandscapingSculptEvent.new(false, Landscaping.OPERATION.PAINT, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, self.brushRadius, 1, self.brushShape, 1, self.terrainLayer)
 							g_client:getServerConnection():sendEvent(requestLandscaping)
-							
+
+							-- TODO: Event queue
+							-- plant grass if desired
+							if self.settings:isGrassEnabled() then
+								local event = LandscapingSculptEvent.new(false, Landscaping.OPERATION.FOLIAGE, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, self.brushRadius, 1, self.brushShape, 0, nil, g_currentMission.foliageSystem:getFoliagePaintByName("meadow").id, self.settings:getGrassType())
+								g_client:getServerConnection():sendEvent(event)
+							end
+
 							-- plant evenly spaced trees
-							if (i - 1) % treeSpacing == 0 then
-								g_treePlantManager:plantTree(22, coord.x, coord.y, coord.z, 0, 0, 0, 3, 1, false)
+							if (i-1) % 16 == 0 and self.settings:isTreeType16Enabled() then
+								-- TODO random orientation. Maybe also random variation
+								g_treePlantManager:plantTree(self.settings:getTreeType16(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
+							elseif (i-1) % 8 == 0 and self.settings:isTreeType8Enabled() then
+								g_treePlantManager:plantTree(self.settings:getTreeType8(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
+							elseif (i-1) % 4 == 0 and self.settings:isTreeType4Enabled() then
+								g_treePlantManager:plantTree(self.settings:getTreeType4(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
+							elseif (i-1) % 2 == 0 and self.settings:isTreeType2Enabled() then
+								g_treePlantManager:plantTree(self.settings:getTreeType2(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
+							elseif self.settings:isTreeType1Enabled() then
+								g_treePlantManager:plantTree(self.settings:getTreeType1(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
 							end
 						else
 							self.cursor:setErrorMessage(g_i18n:getText(ConstructionBrush.ERROR_MESSAGES[err]))
@@ -255,3 +271,21 @@ end
 function ConstructionBrushParallelLines:getButtonTertiaryText()
 	return string.format(g_i18n:getText("input_CONSTRUCTION_FREEMODE"), g_i18n:getText(self.freeMode and "ui_on" or "ui_off"))
 end
+
+function ConstructionBrushParallelLines:onOpenSettingsDialog()
+	printf("Keyline Design: Opening settings dialog")
+	ParallelLineSettingsDialog.getInstance():show()
+end
+
+-- Allow opening the settings menu, but in a non-standard way which shows a dialog instead
+ConstructionScreen.registerBrushActionEvents = Utils.appendedFunction(ConstructionScreen.registerBrushActionEvents, function(constructionScreen)
+	if constructionScreen.brush and constructionScreen.brush.keylines ~= nil and constructionScreen.brush.coords ~= nil then
+		printf("Keyline Design: Injecting button for settings dialog")
+		local isValid
+		isValid, constructionScreen.showConfigsEvent = g_inputBinding:registerActionEvent(InputAction.CONSTRUCTION_SHOW_CONFIGS, constructionScreen.brush, constructionScreen.brush.onOpenSettingsDialog, false, true, false, true)
+		printf("Keyline Design: event ID = %s, isValid = %s", constructionScreen.showConfigsEvent, isValid)
+		g_inputBinding:setActionEventText(constructionScreen.showConfigsEvent, g_i18n:getText("input_CONSTRUCTION_SHOW_CONFIGS"))
+		g_inputBinding:setActionEventTextPriority(constructionScreen.showConfigsEvent, GS_PRIO_HIGH)
+		table.insert(constructionScreen.brushEvents, constructionScreen.showConfigsEvent)
+	end
+end)

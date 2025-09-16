@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI onOpen="onOpen" onClose="onClose" onCreate="onCreate">
+	<GuiElement profile="newLayer"/>
+	<Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
+	<GuiElement profile="kd_dialogBackground" id="dialogElement" size="1200px 900px">
+		<ThreePartBitmap profile="fs25_dialogBgMiddleSmall"/>
+		<ThreePartBitmap profile="fs25_dialogBgTopSmall"/>
+		<ThreePartBitmap profile="fs25_dialogBgBottom"/>
+		<GuiElement profile="fs25_dialogContentContainer">
+			<Text profile="fs25_dialogTitle" text="Parallel Line Settings" id="dialogTitleElement" position="0px -20px"/>
+			<ThreePartBitmap profile="fs25_lineSeparatorTop" absoluteSizeOffset="100px 0px" position="0px -80px"/>
+			<ScrollingLayout profile="fs25_settingsLayout" id="settingsLayout" topClipperElementName="topClipper" bottomClipperElementName="bottomClipper" position="20px -100px" width="1160px" height="720px">
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="lengthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="lengthSettingToolTip" text="The maximum length of the keyline in meters"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="lengthSettingTitle" text="Max. Keyline Length"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="stripWidthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="stripWidthSettingTooltip" text="The width of the harvestable strips"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="stripWidthSettingTitle" text="Strip Width"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="resolutionSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="resolutionSettingTooltip" text="The resolution of the keyline, i.e., the distance between individual points"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="resolutionSettingTitle" text="Resolution"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="grassTypeSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="grassTypeSettingTooltip" text="The type of grass to be planted"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="grassTypeSettingTitle" text="Grass Type"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="shrubTypeSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="shrubTypeSettingTooltip" text="The type of shrubs to be planted"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="shrubTypeSettingTitle" text="Shrub Type"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="treeType16Setting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType16SettingTooltip" text="The type of trees to be planted every 16 meters (first priority)"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="treeType16SettingTitle" text="Tree Type 1 (every 16m)"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="treeType8Setting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType8SettingTooltip" text="The type of trees to be planted every 8 meters (second priority)"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="treeType8SettingTitle" text="Tree Type 2 (every 8m)"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="treeType4Setting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType4SettingTooltip" text="The type of trees to be planted every 4 meters (third priority)"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="treeType4SettingTitle" text="Tree Type 3 (every 4m)"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="treeType2Setting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType2SettingTooltip" text="The type of trees to be planted every 2 meters (fourth priority)"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="treeType2SettingTitle" text="Tree Type 4 (every 2m)"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="treeType1Setting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType1SettingTooltip" text="The type of trees to be planted every 1 meter (fifth priority)"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="treeType1SettingTitle" text="Tree Type 5 (every 1m)"/>
+				</GuiElement>
+			</ScrollingLayout>
+		</GuiElement>
+		<BoxLayout profile="fs25_dialogButtonBox">
+			<Button profile="buttonYes" text="$l10n_button_ok" onClick="onYes" id="yesButton"/>
+			<Bitmap profile="fs25_dialogButtonBoxSeparator"/>
+			<Button profile="buttonNo" text="$l10n_button_cancel" onClick="onNo" id="noButton"/>
+		</BoxLayout>
+	</GuiElement>
+	<GuiProfiles>
+		<Profile name="kd_dialogBackground" extends="fs25_dialogBg">
+			<height value="830px"/>
+		</Profile>
+		<Profile name="kd_text" extends="dialogText" with="anchorBottomCenter">
+			<textColor value="1 1 1 1"/>
+		</Profile>
+		<Profile name="kd_multiTextOptionWrapper" extends="baseReference" with="anchorTopStretchingX">
+			<width  value="570px"/>
+			<height value="50px"/>
+		</Profile>
+		<Profile name="kd_multiTextTitle" extends="fs25_textDefault" with="anchorMiddleLeft">
+			<width    value="570px"/>
+			<textBold value="false"/>
+			<textSize value="18px"/>
+		</Profile>
+		<Profile name="kd_multiTextOption" extends="fs25_settingsMultiTextOption" with="anchorMiddleRight"/>
+		<Profile name="kd_multiTextOptionTooltip" extends="fs25_multiTextOptionTooltip"/>
+	</GuiProfiles>
+</GUI>

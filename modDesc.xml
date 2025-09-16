@@ -11,10 +11,12 @@
     <iconFilename>icon_KeylineDesign.dds</iconFilename>
     <multiplayer supported="true" />
     <extraSourceFiles>
-        <sourceFile filename="scripts/KeylineDesign.lua" />
         <sourceFile filename="scripts/KeylineCalculation.lua" />
         <sourceFile filename="scripts/ParallelCurveCalculation.lua" />
         <sourceFile filename="scripts/ConstructionBrushKeyline.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLines.lua" />
+        <sourceFile filename="scripts/ConstructionBrushParallelLinesSettings.lua" />
+        <sourceFile filename="scripts/gui/ParallelLineSettingsDialog.lua" />
+        <sourceFile filename="scripts/KeylineDesign.lua" />
     </extraSourceFiles>
 </modDesc>

@@ -98,39 +98,10 @@ function ConstructionBrushKeyline:update(dt)
 	local initialZDir = 0
 	if x ~= nil then
 		-- Get the central keyline first
-		local keylineCoords, mainXDir, mainZDir = KeylineCalculation.getSingleKeylineCoords(x, y, z, initialXDir, initialZDir, pointDistance, pointAmount)
+		local keylineCoords = KeylineCalculation.getSingleKeylineCoords(x, y, z, initialXDir, initialZDir, pointDistance, pointAmount)
 		table.insert(self.coords, keylineCoords)
 
 		Utils.renderTextAtWorldPosition(x, y + .2, z, "0", getCorrectTextSize(.02), 0, 0, 0, 1, 1)
-
-		-- Get lines to the left of the main direction
-		for i = 1, numLinesLeftOfKeyline do
-			local lineDist = i * -parallelDistance
-			-- Calculate the starting point on a perpendicular line to the main direction
-			local x2, z2 = x - mainZDir * lineDist, z + mainXDir * lineDist
-			local y2 = getTerrainHeightAtWorldPos(g_terrainNode, x2, 0, z2)
-
-			if y2 ~= nil then
-				keylineCoords = KeylineCalculation.getSingleKeylineCoords(x2, y2, z2, mainXDir, mainZDir, pointDistance, pointAmount)
-				table.insert(self.coords, keylineCoords)
-
-				Utils.renderTextAtWorldPosition(x2, y2 + .2, z2, string.format("%d", i), getCorrectTextSize(.02), 0, 0, 0, 1, 1)
-			end
-		end
-
-		-- Get lines right of the main direction
-		for i = 1, numLinesRightOfKeyline do
-			local lineDist = i * parallelDistance
-			-- Calculate the starting point on a perpendicular line to the main direction
-			local x2, z2 = x - mainZDir * lineDist, z + mainXDir * lineDist
-			local y2 = getTerrainHeightAtWorldPos(g_terrainNode, x2, 0, z2)
-			if y2 ~= nil then
-				keylineCoords = KeylineCalculation.getSingleKeylineCoords(x2, y2, z2, mainXDir, mainZDir, pointDistance, pointAmount)
-				table.insert(self.coords, keylineCoords)
-
-				Utils.renderTextAtWorldPosition(x2, y2 + .2, z2, string.format("%d", i + numLinesLeftOfKeyline), getCorrectTextSize(.02), 0, 0, 0, 1, 1)
-			end
-		end
 	end
 end
 

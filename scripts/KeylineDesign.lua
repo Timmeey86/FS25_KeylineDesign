@@ -1,4 +1,21 @@
 KeylineDesign = {}
+MOD_DIR = g_currentModDirectory
+
+-- Register the settings dialog
+local settings = ConstructionBrushParallelLinesSettings.createInstance()
+ParallelLineSettingsDialog.createInstance(settings)
+ParallelLineSettingsDialog.getInstance():register()
+BaseMission.loadMapFinished = Utils.appendedFunction(BaseMission.loadMapFinished, function(mission)
+	ParallelLineSettingsDialog.getInstance():initializeValues()
+end)
+
+-- Allow reloading the settings dialog for faster development
+local self = setmetatable({}, Class(KeylineDesign))
+addConsoleCommand('kdReloadGui', '', 'consoleReloadGui', self)
+function KeylineDesign:consoleReloadGui()
+	ParallelLineSettingsDialog.getInstance():reload()
+end
+
 
 function KeylineDesign.buildTerrainPaintBrushes(constructionScreen, superFunc, numItems)
 	numItems = superFunc(constructionScreen, numItems)
