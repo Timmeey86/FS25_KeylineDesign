@@ -139,7 +139,7 @@ function ConstructionBrushParallelLines:update(dt)
 			end
 			DebugUtil.drawDebugLine(x1, y1 + 0.3, z1, x2, y2 + 0.3, z2, color[1], color[2], color[3], 0)
 
-			--Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
+			Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
 
 		end
 	end
@@ -151,7 +151,7 @@ function ConstructionBrushParallelLines:updateKeyline()
 	self.keylines = {}
 	if x ~= nil then
 		local pointDistance = self.settings.resolution
-		local pointAmount = self.settings.length
+		local pointAmount = 5 --self.settings.length
 		local initialXDir, initialZDir = MathUtil.getDirectionFromYRotation(self.angle * math.pi / 180)
 
 		-- Get the central keyline first
@@ -171,7 +171,7 @@ function ConstructionBrushParallelLines:calculateParallelCurves()
 	self.coords = {}
 	-- TODO config
 	local numLinesLeftOfKeyline = 0
-	local numLinesRightOfKeyline = 10 --self.settings.stripWidth + 2 * self.brushRadius
+	local numLinesRightOfKeyline = 2 --self.settings.stripWidth + 2 * self.brushRadius
 	local parallelDistance = 1
 	if #self.keylines > 0 then
 
@@ -196,6 +196,8 @@ function ConstructionBrushParallelLines:calculateParallelCurves()
 					-- Instead of calculating a curve at the target distance, calculate several curves on the way. This seems to fix
 					-- concave turns where you'd otherwise get loops in the parallel line
 					curve = ParallelLineAlgorithm.getParallelLine(referenceCoords, lineDist, -mainXDir, -mainZDir)
+					-- transform the curve into equidistant points so that segments can't get too short
+					--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
 					referenceCoords = curve
 				end
 				--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
@@ -210,9 +212,10 @@ function ConstructionBrushParallelLines:calculateParallelCurves()
 				local curve
 				for j = 1, parallelDistance do
 					curve = ParallelLineAlgorithm.getParallelLine(referenceCoords, lineDist, mainXDir, mainZDir)
+					-- transform the curve into equidistant points so that segments can't get too short
+					--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
 					referenceCoords = curve
 				end
-				--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
 				table.insert(self.coords, curve)
 			end
 		end

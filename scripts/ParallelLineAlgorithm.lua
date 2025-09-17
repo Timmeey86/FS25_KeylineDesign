@@ -68,7 +68,7 @@ function ParallelLineAlgorithm.getParallelLine(inputCoords, distance, mainXDir, 
 		local isParallel = curX == nil
 		if isParallel then
 			-- Lines are parallel, just add the perpendicular point
-			curX, curZ = x1, z1
+			curX, curZ = x2, z2
 		end
 		table.insert(outputCoords, {x = curX, z = curZ, parallel = isParallel})
 
