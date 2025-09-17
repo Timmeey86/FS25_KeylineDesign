@@ -79,32 +79,49 @@ function ParallelCurveCalculation.removeLoops(offsetCoords)
 end
 
 ---Converts a list of X/Z values with arbitrary spacing into a list of points with equal spacing
-function ParallelCurveCalculation.getEquidistantPoints(curve, spacing)
-    if #curve < 2 then return curve end
-
-    local equidistant = {}
-    table.insert(equidistant, {x = curve[1].x, y = getTerrainHeightAtWorldPos(g_terrainNode, curve[1].x, 0, curve[1].z), z = curve[1].z})
-
-    local accumulatedDist = 0
-    for i = 2, #curve do
-        local p1 = curve[i - 1]
-        local p2 = curve[i]
-        local segmentLength = math.sqrt((p2.x - p1.x)^2 + (p2.z - p1.z)^2)
-
-        while accumulatedDist + segmentLength >= spacing do
-            local t = (spacing - accumulatedDist) / segmentLength
-            local newX = p1.x + t * (p2.x - p1.x)
-            local newZ = p1.z + t * (p2.z - p1.z)
-            local newY = getTerrainHeightAtWorldPos(g_terrainNode, newX, 0, newZ)
-            table.insert(equidistant, {x = newX, y = newY, z = newZ})
-
-            -- Move to the next point along the segment
-            p1.x, p1.z = newX, newZ
-            segmentLength = math.sqrt((p2.x - p1.x)^2 + (p2.z - p1.z)^2)
-            accumulatedDist = 0
-        end
-        accumulatedDist = accumulatedDist + segmentLength
+function ParallelCurveCalculation.getEquidistantPoints(curve, spacing, maxPoints)
+    -- Space out the points evenly along the curve
+    if #curve < 2 then
+        return curve -- Not enough points to process
     end
-
-    return equidistant
+    local curveLength = 0
+    local segmentLengths = {}
+    for i = 2, #curve do
+        local dx = curve[i].x - curve[i - 1].x
+        local dz = curve[i].z - curve[i - 1].z
+        local segLen = math.sqrt(dx * dx + dz * dz)
+        table.insert(segmentLengths, segLen)
+        curveLength = curveLength + segLen
+    end
+    local numNewPoints = math.floor(curveLength / spacing)
+    if maxPoints ~= nil and numNewPoints > maxPoints * 1.5 then
+        numNewPoints = maxPoints * 1.5
+    end
+    if numNewPoints < 2 then
+        return { curve[1], curve[#curve] } -- Just return start and end if too few points
+    end
+    local newCurve = {}
+    local currentSeg = 1
+    local currentSegPos = 0
+    table.insert(newCurve, { x = curve[1].x, z = curve[1].z }) -- Start point
+    for i = 1, numNewPoints - 1 do
+        local targetDist = i * spacing
+        while currentSeg <= #segmentLengths and currentSegPos + segmentLengths[currentSeg] < targetDist do
+            currentSegPos = currentSegPos + segmentLengths[currentSeg]
+            currentSeg = currentSeg + 1
+        end
+        if currentSeg > #segmentLengths then
+            break -- Reached the end of the curve
+        end
+        local segStart = curve[currentSeg]
+        local segEnd = curve[currentSeg + 1]
+        local segLen = segmentLengths[currentSeg]
+        local segFraction = (targetDist - currentSegPos) / segLen
+        local newX = segStart.x + (segEnd.x - segStart.x) * segFraction
+        local newZ = segStart.z + (segEnd.z - segStart.z) * segFraction
+        table.insert(newCurve, { x = newX, z = newZ })
+    end
+    -- add the last point
+    table.insert(newCurve, { x = curve[#curve].x, z = curve[#curve].z })
+    return newCurve
 end

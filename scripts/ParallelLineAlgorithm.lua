@@ -43,7 +43,6 @@ local function getIntersectionPoint(x1, z1, dir1X, dir1Z, x2, z2, dir2X, dir2Z)
 	local z = z1 + t1 * dir1Z
 	return x, z
 end
-
 function ParallelLineAlgorithm.getParallelLine(inputCoords, distance, mainXDir, mainZDir)
 	if #inputCoords < 3 then
 		return nil -- need at least two segments for this to make sense
@@ -80,5 +79,8 @@ function ParallelLineAlgorithm.getParallelLine(inputCoords, distance, mainXDir, 
 	local endX, endZ = inputCoords[#inputCoords].x, inputCoords[#inputCoords].z
 	curX, curZ = getPerpendicularPoint(endX, endZ, curDirX, curDirZ, distance)
 	table.insert(outputCoords, {x = curX, z = curZ})
+
+	-- Before returning the curve, remove any loops
+	--return ParallelCurveCalculation.removeLoops(outputCoords)
 	return outputCoords
 end

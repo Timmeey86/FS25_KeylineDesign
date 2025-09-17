@@ -139,7 +139,7 @@ function ConstructionBrushParallelLines:update(dt)
 			end
 			DebugUtil.drawDebugLine(x1, y1 + 0.3, z1, x2, y2 + 0.3, z2, color[1], color[2], color[3], 0)
 
-			Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
+			Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i-1), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
 
 		end
 	end
@@ -151,7 +151,7 @@ function ConstructionBrushParallelLines:updateKeyline()
 	self.keylines = {}
 	if x ~= nil then
 		local pointDistance = self.settings.resolution
-		local pointAmount = 5 --self.settings.length
+		local pointAmount = self.settings.length
 		local initialXDir, initialZDir = MathUtil.getDirectionFromYRotation(self.angle * math.pi / 180)
 
 		-- Get the central keyline first
@@ -170,9 +170,10 @@ end
 function ConstructionBrushParallelLines:calculateParallelCurves()
 	self.coords = {}
 	-- TODO config
-	local numLinesLeftOfKeyline = 0
-	local numLinesRightOfKeyline = 2 --self.settings.stripWidth + 2 * self.brushRadius
+	local numLinesLeftOfKeyline = 5
+	local numLinesRightOfKeyline = 5 --self.settings.stripWidth + 2 * self.brushRadius
 	local parallelDistance = 1
+	local maxPoints = self.settings.length
 	if #self.keylines > 0 then
 
 		-- Get lines to the left of the main direction
@@ -197,7 +198,7 @@ function ConstructionBrushParallelLines:calculateParallelCurves()
 					-- concave turns where you'd otherwise get loops in the parallel line
 					curve = ParallelLineAlgorithm.getParallelLine(referenceCoords, lineDist, -mainXDir, -mainZDir)
 					-- transform the curve into equidistant points so that segments can't get too short
-					--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
+					curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution, maxPoints)
 					referenceCoords = curve
 				end
 				--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
@@ -213,7 +214,9 @@ function ConstructionBrushParallelLines:calculateParallelCurves()
 				for j = 1, parallelDistance do
 					curve = ParallelLineAlgorithm.getParallelLine(referenceCoords, lineDist, mainXDir, mainZDir)
 					-- transform the curve into equidistant points so that segments can't get too short
-					--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
+					printf("Calculating equidistant points for curve with %d points", #curve)
+					curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution, maxPoints)
+					printf("Curve now has %d points", #curve)
 					referenceCoords = curve
 				end
 				table.insert(self.coords, curve)
@@ -302,7 +305,7 @@ function ConstructionBrushParallelLines:onAxisPrimary(inputValue)
 end
 
 function ConstructionBrushParallelLines:onButtonSecondary()
-	self:calculateParallelCurves()
+	self:exportKeylines()
 end
 
 function ConstructionBrushParallelLines:onButtonTertiary()
@@ -347,3 +350,32 @@ ConstructionScreen.registerBrushActionEvents = Utils.appendedFunction(Constructi
 		table.insert(constructionScreen.brushEvents, constructionScreen.showConfigsEvent)
 	end
 end)
+
+g_xmlManager:addCreateSchemaFunction(function()
+	ConstructionBrushParallelLines.xmlSchema = XMLSchema.new("keylines")
+end)
+g_xmlManager:addInitSchemaFunction(function()
+	ConstructionBrushParallelLines.xmlSchema:register(XMLValueType.FLOAT, "keylines.keyline(?).coords(?)#x", "X coordinate", nil, true)
+	ConstructionBrushParallelLines.xmlSchema:register(XMLValueType.FLOAT, "keylines.keyline(?).coords(?)#z", "Z coordinate", nil, true)
+end)
+function ConstructionBrushParallelLines:exportKeylines()
+	-- Write keyline coordinates to an XML file
+	local filePath = Utils.getFilename("/keylines.xml", g_currentMission.missionInfo.savegameDirectory)
+	local xmlFile = XMLFile.create("keylinesXML", filePath, "keylines", ConstructionBrushParallelLines.xmlSchema)
+	if not xmlFile then
+		Logging.error("Failed exporting keylines to XML")
+		return
+	end
+	for i = 1, #self.keylines do
+		local keyline = self.keylines[i]
+		local xmlKey = ("keylines.keyline(%d)"):format(i - 1)
+
+		for j = 1, #keyline do
+			local coordKey = xmlKey .. (".coords(%d)"):format(j - 1)
+			xmlFile:setValue(coordKey .. "#x", keyline[j].x)
+			xmlFile:setValue(coordKey .. "#z", keyline[j].z)
+		end
+	end
+	xmlFile:save(true)
+	xmlFile:delete()
+end
