@@ -83,6 +83,30 @@ function ConstructionBrushParallelLines:toggleBrushShape()
 	end
 end
 
+
+-- HSV to RGB conversion function
+local function hsvToRgb(h, s, v)
+	local r, g, b
+
+	local i = math.floor(h * 6)
+	local f = h * 6 - i
+	local p = v * (1 - s)
+	local q = v * (1 - f * s)
+	local t = v * (1 - (1 - f) * s)
+
+	i = i % 6
+
+	if i == 0 then r, g, b = v, t, p
+	elseif i == 1 then r, g, b = q, v, p
+	elseif i == 2 then r, g, b = p, v, t
+	elseif i == 3 then r, g, b = p, q, v
+	elseif i == 4 then r, g, b = t, p, v
+	elseif i == 5 then r, g, b = v, p, q
+	end
+
+	return r, g, b
+end
+
 function ConstructionBrushParallelLines:update(dt)
 	ConstructionBrushParallelLines:superClass().update(self, dt)
 
@@ -95,9 +119,13 @@ function ConstructionBrushParallelLines:update(dt)
 		-- Current mouse keyline in red
 		table.insert(lines, { coords = keyline, color = {1, 0, 0} })
 	end
-	for _, curve in ipairs(self.coords) do
-		-- Other lines in blue (includes the original keyline where the player clicked)
-		table.insert(lines, { coords = curve, color = {0, 1, 0} })
+	for i = 1, #self.coords do
+		local curve = self.coords[i]
+		-- Cycle through 24 distinguishable colors based on i
+		local colorIndex = ((i - 1) % 6) + 1
+		local hue = (colorIndex - 1) / 6
+		local r, g, b = hsvToRgb(hue, 1, 1)
+		table.insert(lines, { coords = curve, color = {r, g, b} })
 	end
 	for j = 1, #lines do
 		local curveData = lines[j]
@@ -106,7 +134,13 @@ function ConstructionBrushParallelLines:update(dt)
 		for i = 2, #curve do
 			local x1, y1, z1 = curve[i - 1].x, curve[i - 1].y, curve[i - 1].z
 			local x2, y2, z2 = curve[i].x,  curve[i].y, curve[i].z
-			DebugUtil.drawDebugLine(x1, y1 + 0.3, z1, x2, y2 + 0.3, z2, color[1], color[2], color[3], .25)
+			if y1 == nil or y2 == nil then
+				break
+			end
+			DebugUtil.drawDebugLine(x1, y1 + 0.3, z1, x2, y2 + 0.3, z2, color[1], color[2], color[3], 0)
+
+			--Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
+
 		end
 	end
 
@@ -122,9 +156,11 @@ function ConstructionBrushParallelLines:updateKeyline()
 
 		-- Get the central keyline first
 		local keylineCoords = KeylineCalculation.getSingleKeylineCoords(x, y, z, initialXDir, initialZDir, pointDistance, pointAmount)
+		--keylineCoords = ParallelCurveCalculation.getEquidistantPoints(keylineCoords, self.settings.resolution)
 		table.insert(self.keylines, keylineCoords)
 		-- Get the same line in reverse direction
 		local inverseKeylineCoords = KeylineCalculation.getSingleKeylineCoords(x, y, z, -initialXDir, -initialZDir, pointDistance, pointAmount)
+		--inverseKeylineCoords = ParallelCurveCalculation.getEquidistantPoints(inverseKeylineCoords, self.settings.resolution)
 		table.insert(self.keylines, inverseKeylineCoords)
 	else
 		self.coords = {}
@@ -133,40 +169,57 @@ end
 
 function ConstructionBrushParallelLines:calculateParallelCurves()
 	self.coords = {}
-	-- Most of these will have to be configuration options at some point
-	local numLinesLeftOfKeyline = 7
-	local numLinesRightOfKeyline = 7
-	local parallelDistance = self.settings.stripWidth + 2 * self.brushRadius
+	-- TODO config
+	local numLinesLeftOfKeyline = 0
+	local numLinesRightOfKeyline = 10 --self.settings.stripWidth + 2 * self.brushRadius
+	local parallelDistance = 1
 	if #self.keylines > 0 then
 
 		-- Get lines to the left of the main direction
-		for direction = -1, 1, 2 do
+		for direction = -1, 1, 3 do
 			local baseCoords
 			if direction == -1 then
 				baseCoords = self.keylines[1]
 				table.insert(self.coords, baseCoords) -- Also add the main keyline
 			else
 				baseCoords = self.keylines[2]
-				table.insert(self.coords, baseCoords) -- Also add the reverse main keyline
+				--table.insert(self.coords, baseCoords) -- Also add the reverse main keyline
 			end
+
+			-- Get lines left of the main direction
+			local referenceCoords = baseCoords
 			for i = 1, numLinesLeftOfKeyline do
-				local lineDist = i * -parallelDistance
-				local parallelCurve = ParallelCurveCalculation.createOffsetCurve(baseCoords, lineDist)
-				local cleanedCurve = ParallelCurveCalculation.removeLoops(parallelCurve)
-				table.insert(self.coords, cleanedCurve)
+				local lineDist = -parallelDistance
+				local mainXDir, mainZDir = referenceCoords[2].x - referenceCoords[1].x, referenceCoords[2].z - referenceCoords[1].z
+				local curve
+				for j = 1, parallelDistance do
+					-- Instead of calculating a curve at the target distance, calculate several curves on the way. This seems to fix
+					-- concave turns where you'd otherwise get loops in the parallel line
+					curve = ParallelLineAlgorithm.getParallelLine(referenceCoords, lineDist, -mainXDir, -mainZDir)
+					referenceCoords = curve
+				end
+				--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
+				table.insert(self.coords, curve)
 			end
 
 			-- Get lines right of the main direction
+			referenceCoords = baseCoords
 			for i = 1, numLinesRightOfKeyline do
-				local lineDist = i * parallelDistance
-				local parallelCurve = ParallelCurveCalculation.createOffsetCurve(baseCoords, lineDist)
-				local cleanedCurve = ParallelCurveCalculation.removeLoops(parallelCurve)
-				table.insert(self.coords, cleanedCurve)
+				local lineDist = parallelDistance
+				local mainXDir, mainZDir = referenceCoords[2].x - referenceCoords[1].x, referenceCoords[2].z - referenceCoords[1].z
+				local curve
+				for j = 1, parallelDistance do
+					curve = ParallelLineAlgorithm.getParallelLine(referenceCoords, lineDist, mainXDir, mainZDir)
+					referenceCoords = curve
+				end
+				--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
+				table.insert(self.coords, curve)
 			end
 		end
 
 		local mouseFarmlandId = g_farmlandManager:getFarmlandIdAtWorldPosition(self.keylines[1][1].x, self.keylines[1][1].z)
 		for j = 1, #self.coords do
+			printf("Removing points not on farmland for curve #%d", j)
 			-- Remove any points which are not on the same farmland
 			local coords = self.coords[j]
 			for i = #coords, 1, -1 do
@@ -177,13 +230,17 @@ function ConstructionBrushParallelLines:calculateParallelCurves()
 				end
 			end
 
+			printf("Calculating Y values for curve #%d", j)
+
 			-- Add missing Y coordinates
 			for i = 1, #coords do
 				coords[i].y = getTerrainHeightAtWorldPos(g_terrainNode, coords[i].x, 0, coords[i].z)
 			end
 		end
+		printf("Done calculating parallel curves")
 	end
 end
+
 function ConstructionBrushParallelLines:onSculptingFinished(isValidation, errorCode, displacedVolumeOrArea) end
 
 function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
@@ -194,10 +251,8 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 	else
 		if #self.coords > 0 then
 			for _, coordList in ipairs(self.coords) do
-				-- Convert the list into a list of equidistant spacing
-				local spacedList = ParallelCurveCalculation.getEquidistantPoints(coordList, self.settings.resolution)
-				for i = 1, #spacedList do
-					local coord = spacedList[i]
+				for i = 1, #coordList do
+					local coord = coordList[i]
 					if math.abs(coord.x) >= g_currentMission.terrainSize/2 or math.abs(coord.z) >= g_currentMission.terrainSize/2 then
 						break -- Skip any points which are out of bounds
 					else
