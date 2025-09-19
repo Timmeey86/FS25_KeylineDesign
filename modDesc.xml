@@ -17,6 +17,7 @@
         <sourceFile filename="scripts/ConstructionBrushKeyline.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLines.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLinesSettings.lua" />
+        <sourceFile filename="scripts/ExportImportInterface.lua" />
         <sourceFile filename="scripts/gui/ParallelLineSettingsDialog.lua" />
         <sourceFile filename="scripts/KeylineDesign.lua" />
     </extraSourceFiles>
