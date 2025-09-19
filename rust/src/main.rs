@@ -11,10 +11,18 @@ struct Coords {
 }
 
 #[derive(Debug, YaDeserialize)]
+struct FieldBoundary {
+	#[yaserde(rename="coords")]
+	coords: Vec<Coords>,
+}
+
+#[derive(Debug, YaDeserialize)]
 #[yaserde(rename="keylines")]
 struct Keylines {
 	#[yaserde(rename="keyline")]
 	keylines: Vec<Keyline>,
+	#[yaserde(rename="fieldBoundary")]
+	field_boundary: FieldBoundary
 }
 
 #[derive(Debug, YaDeserialize)]
@@ -37,28 +45,26 @@ struct ParallelLine {
 }
 
 fn generate_parallel_lines(
-	keylines: &Keylines,
+	coords: &Vec<Coords>,
 	num_lines: u16,
 	distance: u16,
 	direction: i32,
 ) -> ParallelLines {
 	let mut parallel_lines = ParallelLines { parallel_lines: Vec::new() };
-	for keyline in &keylines.keylines {
-		let mut pline = Polyline::with_capacity(keyline.coords.len(), false);
-		for coord in &keyline.coords {
-			pline.add(coord.x, coord.z, 0.0);
-		}
-		// Generate parallel offset lines as desired
-		for i in 1..=num_lines {
-			let offset_distance = distance as f64 * i as f64 * direction as f64;
-			let offset_plines = pline.parallel_offset(offset_distance);
-			for offset_pline in offset_plines {
-				let mut coords = Vec::new();
-				for point in offset_pline.vertex_data {
-					coords.push(Coords { x: point.x, z: point.y });
-				}
-				parallel_lines.parallel_lines.push(ParallelLine { coords });
+	let mut pline = Polyline::with_capacity(coords.len(), false);
+	for coord in coords {
+		pline.add(coord.x, coord.z, 0.0);
+	}
+	// Generate parallel offset lines as desired
+	for i in 1..=num_lines {
+		let offset_distance = distance as f64 * i as f64 * direction as f64;
+		let offset_plines = pline.parallel_offset(offset_distance);
+		for offset_pline in offset_plines {
+			let mut coords = Vec::new();
+			for point in offset_pline.vertex_data {
+				coords.push(Coords { x: point.x, z: point.y });
 			}
+			parallel_lines.parallel_lines.push(ParallelLine { coords });
 		}
 	}
 	parallel_lines
@@ -91,11 +97,16 @@ fn main() {
 	println!("Found {} keylines.", keylines.keylines.len());
 
 	// Convert to a cavalier_contours pline structure. Since we only have straight line segments, we always set bulge = 0
-	let parallel_lines1 = generate_parallel_lines(&keylines, *num_lines_right, *distance, 1);
-	let parallel_lines2 = generate_parallel_lines(&keylines, *num_lines_left, *distance, -1);
+	let parallel_lines1 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_right, *distance, 1);
+	let parallel_lines2 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_left, *distance, -1);
 	// combine both sets into a single one
 	let mut parallel_lines = parallel_lines1;
 	parallel_lines.parallel_lines.extend(parallel_lines2.parallel_lines);
+
+	let parallel_boundary = generate_parallel_lines(&keylines.field_boundary.coords, 1, *distance, 1);
+
+	// for now, add the field boundary as well. Later on we will cut the parallel lines at the field boundary
+	parallel_lines.parallel_lines.extend(parallel_boundary.parallel_lines);
 
 	// For every parallel line, redefine the coordinates so they all have an equal spacing of 1 unit
 	for pline in &mut parallel_lines.parallel_lines {
