@@ -13,12 +13,13 @@ function ConstructionBrushParallelLines.new(subclass_mt, cursor)
 	self.supportsPrimaryAxis = true
 	self.primaryAxisIsContinuous = false
 	self.supportsSecondaryButton = true
-	self.supportsTertiaryButton = false
+	self.supportsTertiaryButton = true
 	self.maxBrushRadius = ConstructionBrushParallelLines.CURSOR_SIZES[#ConstructionBrushParallelLines.CURSOR_SIZES] / 2
 	self.freeMode = false
 	self.angle = 0
 	self.coords = {}
 	self.keylines = {}
+	self.exportedKeylines = {}
 	self.settings = ConstructionBrushParallelLinesSettings.getInstance()
 	return self
 end
@@ -119,6 +120,10 @@ function ConstructionBrushParallelLines:update(dt)
 		-- Current mouse keyline in red
 		table.insert(lines, { coords = keyline, color = {1, 0, 0} })
 	end
+	for _, keyline in ipairs(self.exportedKeylines) do
+		-- Exported keylines in yellow
+		table.insert(lines, { coords = keyline, color = {1, 1, 0} })
+	end
 	for i = 1, #self.coords do
 		local curve = self.coords[i]
 		-- Cycle through 24 distinguishable colors based on i
@@ -137,9 +142,9 @@ function ConstructionBrushParallelLines:update(dt)
 			if y1 == nil or y2 == nil then
 				break
 			end
-			DebugUtil.drawDebugLine(x1, y1 + 0.3, z1, x2, y2 + 0.3, z2, color[1], color[2], color[3], 0)
+			DebugUtil.drawDebugLine(x1, y1 + 0.3, z1, x2, y2 + 0.3, z2, color[1], color[2], color[3], 0.05)
 
-			Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i-1), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
+			--Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i-1), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
 
 		end
 	end
@@ -164,86 +169,6 @@ function ConstructionBrushParallelLines:updateKeyline()
 		table.insert(self.keylines, inverseKeylineCoords)
 	else
 		self.coords = {}
-	end
-end
-
-function ConstructionBrushParallelLines:calculateParallelCurves()
-	self.coords = {}
-	-- TODO config
-	local numLinesLeftOfKeyline = 5
-	local numLinesRightOfKeyline = 5 --self.settings.stripWidth + 2 * self.brushRadius
-	local parallelDistance = 1
-	local maxPoints = self.settings.length
-	if #self.keylines > 0 then
-
-		-- Get lines to the left of the main direction
-		for direction = -1, 1, 3 do
-			local baseCoords
-			if direction == -1 then
-				baseCoords = self.keylines[1]
-				table.insert(self.coords, baseCoords) -- Also add the main keyline
-			else
-				baseCoords = self.keylines[2]
-				--table.insert(self.coords, baseCoords) -- Also add the reverse main keyline
-			end
-
-			-- Get lines left of the main direction
-			local referenceCoords = baseCoords
-			for i = 1, numLinesLeftOfKeyline do
-				local lineDist = -parallelDistance
-				local mainXDir, mainZDir = referenceCoords[2].x - referenceCoords[1].x, referenceCoords[2].z - referenceCoords[1].z
-				local curve
-				for j = 1, parallelDistance do
-					-- Instead of calculating a curve at the target distance, calculate several curves on the way. This seems to fix
-					-- concave turns where you'd otherwise get loops in the parallel line
-					curve = ParallelLineAlgorithm.getParallelLine(referenceCoords, lineDist, -mainXDir, -mainZDir)
-					-- transform the curve into equidistant points so that segments can't get too short
-					curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution, maxPoints)
-					referenceCoords = curve
-				end
-				--curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution)
-				table.insert(self.coords, curve)
-			end
-
-			-- Get lines right of the main direction
-			referenceCoords = baseCoords
-			for i = 1, numLinesRightOfKeyline do
-				local lineDist = parallelDistance
-				local mainXDir, mainZDir = referenceCoords[2].x - referenceCoords[1].x, referenceCoords[2].z - referenceCoords[1].z
-				local curve
-				for j = 1, parallelDistance do
-					curve = ParallelLineAlgorithm.getParallelLine(referenceCoords, lineDist, mainXDir, mainZDir)
-					-- transform the curve into equidistant points so that segments can't get too short
-					printf("Calculating equidistant points for curve with %d points", #curve)
-					curve = ParallelCurveCalculation.getEquidistantPoints(curve, self.settings.resolution, maxPoints)
-					printf("Curve now has %d points", #curve)
-					referenceCoords = curve
-				end
-				table.insert(self.coords, curve)
-			end
-		end
-
-		local mouseFarmlandId = g_farmlandManager:getFarmlandIdAtWorldPosition(self.keylines[1][1].x, self.keylines[1][1].z)
-		for j = 1, #self.coords do
-			printf("Removing points not on farmland for curve #%d", j)
-			-- Remove any points which are not on the same farmland
-			local coords = self.coords[j]
-			for i = #coords, 1, -1 do
-				local coord = coords[i]
-				local farmlandId = g_farmlandManager:getFarmlandIdAtWorldPosition(coord.x, coord.z)
-				if farmlandId ~= mouseFarmlandId then
-					table.remove(coords, i)
-				end
-			end
-
-			printf("Calculating Y values for curve #%d", j)
-
-			-- Add missing Y coordinates
-			for i = 1, #coords do
-				coords[i].y = getTerrainHeightAtWorldPos(g_terrainNode, coords[i].x, 0, coords[i].z)
-			end
-		end
-		printf("Done calculating parallel curves")
 	end
 end
 
@@ -309,12 +234,7 @@ function ConstructionBrushParallelLines:onButtonSecondary()
 end
 
 function ConstructionBrushParallelLines:onButtonTertiary()
-	self.freeMode = not self.freeMode
-	self:setInputTextDirty()
-	if self.freeMode and not g_gameSettings:getValue(GameSettings.SETTING.SHOWN_FREEMODE_WARNING) then
-		InfoDialog.show(g_i18n:getText("ui_constructionFreeModeWarning"))
-		g_gameSettings:setValue(GameSettings.SETTING.SHOWN_FREEMODE_WARNING, true)
-	end
+	self:importParallelLines()
 end
 
 function ConstructionBrushParallelLines:getButtonPrimaryText()
@@ -326,11 +246,11 @@ function ConstructionBrushParallelLines:getAxisPrimaryText()
 end
 
 function ConstructionBrushParallelLines:getButtonSecondaryText()
-	return "Calculate" -- TODO
+	return "Export keyline"
 end
 
 function ConstructionBrushParallelLines:getButtonTertiaryText()
-	return string.format(g_i18n:getText("input_CONSTRUCTION_FREEMODE"), g_i18n:getText(self.freeMode and "ui_on" or "ui_off"))
+	return "Import parallel lines"
 end
 
 function ConstructionBrushParallelLines:onOpenSettingsDialog()
@@ -352,30 +272,105 @@ ConstructionScreen.registerBrushActionEvents = Utils.appendedFunction(Constructi
 end)
 
 g_xmlManager:addCreateSchemaFunction(function()
-	ConstructionBrushParallelLines.xmlSchema = XMLSchema.new("keylines")
+	ConstructionBrushParallelLines.exportSchema = XMLSchema.new("keylines")
+	ConstructionBrushParallelLines.importSchema = XMLSchema.new("parallelLines")
 end)
 g_xmlManager:addInitSchemaFunction(function()
-	ConstructionBrushParallelLines.xmlSchema:register(XMLValueType.FLOAT, "keylines.keyline(?).coords(?)#x", "X coordinate", nil, true)
-	ConstructionBrushParallelLines.xmlSchema:register(XMLValueType.FLOAT, "keylines.keyline(?).coords(?)#z", "Z coordinate", nil, true)
+	ConstructionBrushParallelLines.exportSchema:register(XMLValueType.FLOAT, "keylines.keyline(?).coords(?)#x", "X coordinate", nil, true)
+	ConstructionBrushParallelLines.exportSchema:register(XMLValueType.FLOAT, "keylines.keyline(?).coords(?)#z", "Z coordinate", nil, true)
+
+	ConstructionBrushParallelLines.importSchema:register(XMLValueType.FLOAT, "parallelLines.parallelLine(?).coords(?)#x", "X coordinate", nil, true)
+	ConstructionBrushParallelLines.importSchema:register(XMLValueType.FLOAT, "parallelLines.parallelLine(?).coords(?)#z", "Z coordinate", nil, true)
 end)
 function ConstructionBrushParallelLines:exportKeylines()
+	-- Combine both keyline directions into a single unidirectional line
+	-- We skip the initial point on the second line since it's already in the first line
+	local combinedKeyline = {}
+	for i = #self.keylines[2], 2, -1 do
+		table.insert(combinedKeyline, self.keylines[2][i])
+	end
+	for i = 1, #self.keylines[1] do
+		table.insert(combinedKeyline, self.keylines[1][i])
+	end
+
 	-- Write keyline coordinates to an XML file
 	local filePath = Utils.getFilename("/keylines.xml", g_currentMission.missionInfo.savegameDirectory)
-	local xmlFile = XMLFile.create("keylinesXML", filePath, "keylines", ConstructionBrushParallelLines.xmlSchema)
+	local xmlFile = XMLFile.create("keylinesXML", filePath, "keylines", ConstructionBrushParallelLines.exportSchema)
 	if not xmlFile then
 		Logging.error("Failed exporting keylines to XML")
 		return
 	end
-	for i = 1, #self.keylines do
-		local keyline = self.keylines[i]
-		local xmlKey = ("keylines.keyline(%d)"):format(i - 1)
+	local xmlKey = ("keylines.keyline(0)")
 
-		for j = 1, #keyline do
-			local coordKey = xmlKey .. (".coords(%d)"):format(j - 1)
-			xmlFile:setValue(coordKey .. "#x", keyline[j].x)
-			xmlFile:setValue(coordKey .. "#z", keyline[j].z)
-		end
+	for j = 1, #combinedKeyline do
+		local coordKey = xmlKey .. (".coords(%d)"):format(j - 1)
+		xmlFile:setFloat(coordKey .. "#x", combinedKeyline[j].x)
+		xmlFile:setFloat(coordKey .. "#z", combinedKeyline[j].z)
 	end
 	xmlFile:save(true)
 	xmlFile:delete()
+
+	-- Remember the keylines so the mouse can keep displaying keylines at the mouse position
+	self.exportedKeylines = {}
+	table.insert(self.exportedKeylines, combinedKeyline)
+end
+
+function ConstructionBrushParallelLines:importParallelLines()
+	-- Read parallel line coordinates from an XML file
+	local filePath = Utils.getFilename("/parallel_lines.xml", g_currentMission.missionInfo.savegameDirectory)
+	local xmlFile = XMLFile.load("parallelLinesXML", filePath, ConstructionBrushParallelLines.importSchema)
+	if not xmlFile then
+		Logging.error("Failed importing parallel lines from XML")
+		return
+	end
+
+	-- Add the keylines to the list of all coordinates first
+	self.coords = {}
+	local allCurves = {}
+	table.insert(allCurves, self.exportedKeylines[1])
+	table.insert(allCurves, self.exportedKeylines[2])
+
+	-- Now read parallel lines from the XML
+	xmlFile:iterate("parallelLines.parallelLine", function(_, parallelLineKey)
+		local curve = {}
+		xmlFile:iterate(parallelLineKey .. ".coords", function(_, coordKey)
+			local x = xmlFile:getFloat(coordKey .. "#x")
+			local z = xmlFile:getFloat(coordKey .. "#z")
+			if x ~= nil and z ~= nil then
+				table.insert(curve, {x = x, z = z})
+			end
+		end)
+		printf("Imported %d points for parallel line %s from the XML file", #curve, parallelLineKey)
+		if #curve > 0 then
+			table.insert(allCurves, curve)
+		end
+	end)
+	xmlFile:delete()
+
+	-- Remove any points which are not on the same farmland as the keyline
+	local currentFarmlandId = g_farmlandManager:getFarmlandIdAtWorldPosition(self.keylines[1][1].x, self.keylines[1][1].z)
+	for _, curve in ipairs(allCurves) do
+		for i = #curve, 1, -1 do
+			local coord = curve[i]
+			local farmlandId = g_farmlandManager:getFarmlandIdAtWorldPosition(coord.x, coord.z)
+			if farmlandId ~= currentFarmlandId then
+				table.remove(curve, i)
+			end
+		end
+	end
+
+	-- Now calculate all the required Y values (except for keylines, those have the Y values already)
+	for i = 1, #allCurves do
+		local curve = allCurves[i]
+		for j = 1, #curve do
+			local coord = curve[j]
+			local y = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, coord.x, 0, coord.z)
+			coord.y = y
+		end
+	end
+
+	-- Store all combined curves
+	self.coords = allCurves
+	-- Clear the exported keylines since they're already in self.coords
+	self.exportedKeylines = {}
 end
