@@ -2,7 +2,7 @@ use cavalier_contours::polyline::*;
 use yaserde_derive::{YaDeserialize, YaSerialize};
 
 // Define structures which match the keyline import and the parallel line export
-#[derive(Debug, YaSerialize, YaDeserialize)]
+#[derive(Debug, YaSerialize, YaDeserialize, PartialEq, Clone)]
 struct Coords {
 	#[yaserde(attribute=true)]
 	pub x: f64,
@@ -70,6 +70,37 @@ fn generate_parallel_lines(
 	parallel_lines
 }
 
+fn point_in_polygon(coord: &Coords, polygon: &[Coords]) -> bool {
+	let mut inside = false;
+
+	if polygon.len() < 3 {
+		return false;
+	}
+
+	// Drop the duplicate last point if present
+	let n = if polygon.first().zip(polygon.last()).map_or(false, |(a, b)| a == b) {
+		polygon.len() - 1
+	} else {
+		polygon.len()
+	};
+
+	for i in 0..n {
+		let j = (i + 1) % n;
+		let (xi, zi) = (polygon[i].x, polygon[i].z);
+		let (xj, zj) = (polygon[j].x, polygon[j].z);
+
+		let intersects = ((zi > coord.z) != (zj > coord.z)) &&
+						(coord.x < (xj - xi) * (coord.z - zi) / (zj - zi) + xi);
+
+		if intersects {
+			inside = !inside;
+		}
+	}
+
+	inside
+}
+
+
 fn main() {
 	let args: Vec<String> = std::env::args().collect();
 	let savegame_id = &args[1];
@@ -93,20 +124,37 @@ fn main() {
 
 	// Deserialize the keylines.xml file
 	let keylines_file = std::fs::File::open(&keylines_path).expect("Failed to open keylines.xml");
-	let keylines: Keylines = yaserde::de::from_reader(keylines_file).expect("Failed to parse keylines.xml");
+	let mut keylines: Keylines = yaserde::de::from_reader(keylines_file).expect("Failed to parse keylines.xml");
 	println!("Found {} keylines.", keylines.keylines.len());
 
-	// Convert to a cavalier_contours pline structure. Since we only have straight line segments, we always set bulge = 0
+	// Round keyline coords to 5 decimal places to avoid floating point precision issues
+	for keyline in &mut keylines.keylines {
+		for coord in &mut keyline.coords {
+			coord.x = (coord.x * 100000.0).round() / 100000.0;
+			coord.z = (coord.z * 100000.0).round() / 100000.0;
+		}
+	}
+	for coord in &mut keylines.field_boundary.coords {
+		coord.x = (coord.x * 100000.0).round() / 100000.0;
+		coord.z = (coord.z * 100000.0).round() / 100000.0;
+	}
+
+	// Generate parallel lines to the keyline
 	let parallel_lines1 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_right, *distance, 1);
 	let parallel_lines2 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_left, *distance, -1);
-	// combine both sets into a single one
+	// combine both sets as well as the initial keyline into a single ParallelLines struct
 	let mut parallel_lines = parallel_lines1;
 	parallel_lines.parallel_lines.extend(parallel_lines2.parallel_lines);
+	parallel_lines.parallel_lines.push(ParallelLine { coords: keylines.keylines[0].coords.clone() });
 
 	let parallel_boundary = generate_parallel_lines(&keylines.field_boundary.coords, 1, *distance, 1);
 
-	// for now, add the field boundary as well. Later on we will cut the parallel lines at the field boundary
-	parallel_lines.parallel_lines.extend(parallel_boundary.parallel_lines);
+	// Cut away any points which are outside of the polygon defined by parallel_boundary
+	let boundary_polygon = &parallel_boundary.parallel_lines[0].coords;
+	for pline in &mut parallel_lines.parallel_lines {
+		pline.coords.retain(|coord| point_in_polygon(coord, boundary_polygon));
+	}
+	parallel_lines.parallel_lines.retain(|pline| pline.coords.len() >= 2);
 
 	// For every parallel line, redefine the coordinates so they all have an equal spacing of 1 unit
 	for pline in &mut parallel_lines.parallel_lines {
