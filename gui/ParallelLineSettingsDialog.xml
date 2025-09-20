@@ -42,33 +42,33 @@
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType16Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType16SettingTooltip" text="The type of trees to be planted every 16 meters (first priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType16SettingTooltip" text="The type of trees to be planted every 32 meters (first priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType16SettingTitle" text="Tree Type 1 (every 16m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType16SettingTitle" text="Tree Type 1 (every 32m)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType8Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType8SettingTooltip" text="The type of trees to be planted every 8 meters (second priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType8SettingTooltip" text="The type of trees to be planted every 16 meters (second priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType8SettingTitle" text="Tree Type 2 (every 8m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType8SettingTitle" text="Tree Type 2 (every 16m)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType4Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType4SettingTooltip" text="The type of trees to be planted every 4 meters (third priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType4SettingTooltip" text="The type of trees to be planted every 8 meters (third priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType4SettingTitle" text="Tree Type 3 (every 4m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType4SettingTitle" text="Tree Type 3 (every 8m)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType2Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType2SettingTooltip" text="The type of trees to be planted every 2 meters (fourth priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType2SettingTooltip" text="The type of trees to be planted every 4 meters (fourth priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType2SettingTitle" text="Tree Type 4 (every 2m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType2SettingTitle" text="Tree Type 4 (every 4m)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType1Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType1SettingTooltip" text="The type of trees to be planted every 1 meter (fifth priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType1SettingTooltip" text="The type of trees to be planted every 2 meters (fifth priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType1SettingTitle" text="Tree Type 5 (every 1m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType1SettingTitle" text="Tree Type 5 (every 2m)"/>
 				</GuiElement>
 			</ScrollingLayout>
 		</GuiElement>

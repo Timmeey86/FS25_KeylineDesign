@@ -207,16 +207,16 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 							end
 
 							-- plant evenly spaced trees
-							if (i-1) % 16 == 0 and self.settings:isTreeType16Enabled() then
+							if (i-1) % 32 == 0 and self.settings:isTreeType16Enabled() then
 								-- TODO random orientation. Maybe also random variation
 								g_treePlantManager:plantTree(self.settings:getTreeType16(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
-							elseif (i-1) % 8 == 0 and self.settings:isTreeType8Enabled() then
+							elseif (i-1) % 16 == 0 and self.settings:isTreeType8Enabled() then
 								g_treePlantManager:plantTree(self.settings:getTreeType8(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
-							elseif (i-1) % 4 == 0 and self.settings:isTreeType4Enabled() then
+							elseif (i-1) % 8 == 0 and self.settings:isTreeType4Enabled() then
 								g_treePlantManager:plantTree(self.settings:getTreeType4(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
-							elseif (i-1) % 2 == 0 and self.settings:isTreeType2Enabled() then
+							elseif (i-1) % 4 == 0 and self.settings:isTreeType2Enabled() then
 								g_treePlantManager:plantTree(self.settings:getTreeType2(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
-							elseif self.settings:isTreeType1Enabled() then
+							elseif (i-1) % 2 == 0 and self.settings:isTreeType1Enabled() then
 								g_treePlantManager:plantTree(self.settings:getTreeType1(), coord.x, coord.y, coord.z, 0, 0, 0, 1, 1, true)
 							end
 						else

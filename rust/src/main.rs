@@ -100,14 +100,48 @@ fn point_in_polygon(coord: &Coords, polygon: &[Coords]) -> bool {
 	inside
 }
 
+fn split_lines_inside_polygon(parallel_lines: &ParallelLines, boundary_polygon: &[Coords]) -> Vec<ParallelLine> {
+	let mut new_parallel_lines = Vec::new();
+
+	for pline in &parallel_lines.parallel_lines {
+		let mut current_coords = Vec::new();
+		let mut inside = false;
+
+		for coord in &pline.coords {
+			let is_inside = point_in_polygon(coord, boundary_polygon);
+
+			if is_inside {
+				current_coords.push(coord.clone());
+				inside = true;
+			} else if inside {
+				// Just exited the polygon, finish the current line
+				if current_coords.len() >= 2 {
+					new_parallel_lines.push(ParallelLine { coords: current_coords.clone() });
+				}
+				current_coords.clear();
+				inside = false;
+			}
+			// If not inside, just skip the point
+		}
+
+		// If the last segment was inside, push it
+		if current_coords.len() >= 2 {
+			new_parallel_lines.push(ParallelLine { coords: current_coords });
+		}
+	}
+
+	new_parallel_lines
+}
+
 
 fn main() {
 	let args: Vec<String> = std::env::args().collect();
 	let savegame_id = &args[1];
-	let distance = &args[2].parse::<u16>().unwrap();
-	let num_lines_left = &args[3].parse::<u16>().unwrap();
-	let num_lines_right = &args[4].parse::<u16>().unwrap();
-	println!("Savegame ID: {}, Distance: {}, Num lines left: {}, Num lines right: {}", savegame_id, distance, num_lines_left, num_lines_right);
+	let strip_width = &args[2].parse::<u16>().unwrap();
+	let keyline_width = &args[3].parse::<u16>().unwrap();
+	let num_lines_left = &args[4].parse::<u16>().unwrap();
+	let num_lines_right = &args[5].parse::<u16>().unwrap();
+	println!("Savegame ID: {}, Strip Width: {}, Keyline Width: {}, Num lines left: {}, Num lines right: {}", savegame_id, strip_width, keyline_width, num_lines_left, num_lines_right);
 
 	// Get the path to the user directory
 	let user_dir = std::env::var("USERPROFILE").unwrap();
@@ -140,21 +174,19 @@ fn main() {
 	}
 
 	// Generate parallel lines to the keyline
-	let parallel_lines1 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_right, *distance, 1);
-	let parallel_lines2 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_left, *distance, -1);
+	let parallel_lines1 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_right, strip_width + keyline_width, 1);
+	let parallel_lines2 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_left, strip_width + keyline_width, -1);
 	// combine both sets as well as the initial keyline into a single ParallelLines struct
 	let mut parallel_lines = parallel_lines1;
 	parallel_lines.parallel_lines.extend(parallel_lines2.parallel_lines);
 	parallel_lines.parallel_lines.push(ParallelLine { coords: keylines.keylines[0].coords.clone() });
 
-	let parallel_boundary = generate_parallel_lines(&keylines.field_boundary.coords, 1, *distance, 1);
+	let parallel_boundary = generate_parallel_lines(&keylines.field_boundary.coords, 1, *strip_width, 1);
 
-	// Cut away any points which are outside of the polygon defined by parallel_boundary
+	// Cut away any points which are outside of the polygon defined by parallel_boundary.
+	// If points were cut off, but then new points are inside the polygon again, split the line into multiple lines
 	let boundary_polygon = &parallel_boundary.parallel_lines[0].coords;
-	for pline in &mut parallel_lines.parallel_lines {
-		pline.coords.retain(|coord| point_in_polygon(coord, boundary_polygon));
-	}
-	parallel_lines.parallel_lines.retain(|pline| pline.coords.len() >= 2);
+	parallel_lines.parallel_lines = split_lines_inside_polygon(&parallel_lines, boundary_polygon);
 
 	// For every parallel line, redefine the coordinates so they all have an equal spacing of 1 unit
 	for pline in &mut parallel_lines.parallel_lines {
