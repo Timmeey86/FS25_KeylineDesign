@@ -1,24 +1,25 @@
 ---This class creates a dialog based on the matching XML flie and handles interactions in this dialog
 ---@class ParallelLineSettingsDialog
----@field lengthSetting table @The UI element for the length setting
+---@field forwardLengthSetting table @The UI element for the forward length setting
+---@field reverseLengthSetting table @The UI element for the reverse length setting
+---@field headlandWidthSetting table @The UI element for the headland width setting
 ---@field stripWidthSetting table @The UI element for the strip width setting
----@field resolutionSetting table @The UI element for the resolution setting
+---@field keylineWidthSetting table @The UI element for the keyline width setting
+---@field numberOfParallelLinesRightSetting table @The UI element for the number of parallel lines to the right setting
+---@field numberOfParallelLinesLeftSetting table @The UI element for the number of parallel lines to the left setting
 ---@field grassTypeSetting table @The UI element for the grass type setting
----@field shrubTypeSetting table @The UI element for the shrub type setting
+---@field treeType32Setting table @The UI element for the tree type 32 setting
 ---@field treeType16Setting table @The UI element for the tree type 16 setting
 ---@field treeType8Setting table @The UI element for the tree type 8 setting
 ---@field treeType4Setting table @The UI element for the tree type 4 setting
 ---@field treeType2Setting table @The UI element for the tree type 2 setting
----@field treeType1Setting table @The UI element for the tree type 1 setting
 ---@field settings ConstructionBrushParallelLinesSettings @The settings object which will be updated when the user presses "yes"
 
 ParallelLineSettingsDialog = {
 	DIALOG_ID = "ParallelLineSettingsDialog",
 	LENGTH_STRINGS = {},
-	STRIP_WIDTH_STRINGS = {},
 	RESOLUTION_STRINGS = {},
 	GRASS_TYPE_STRINGS = {},
-	SHRUB_TYPE_STRINGS = {},
 	TREE_TYPE_STRINGS = {},
 	LENGTH_STEP = 50
 }
@@ -91,17 +92,24 @@ end
 function ParallelLineSettingsDialog:onYesNo(yesWasPressed)
 	if yesWasPressed then
 		local settings = {
-			length = self.lengthSetting.state * ParallelLineSettingsDialog.LENGTH_STEP,
-			stripWidth = self.stripWidthSetting.state,
-			resolution = self.resolutionSetting.state,
+			forwardLength = (self.forwardLengthSetting.state - 1) * ParallelLineSettingsDialog.LENGTH_STEP,
+			reverseLength = (self.reverseLengthSetting.state - 1) * ParallelLineSettingsDialog.LENGTH_STEP,
+			headlandWidth = self.headlandWidthSetting.state - 1,
+			stripWidth = self.stripWidthSetting.state + 6 - 1,
+			keylineWidth = self.keylineWidthSetting.state + 3 - 1,
+			numberOfParallelLinesRight = self.numberOfParallelLinesRightSetting.state - 1,
+			numberOfParallelLinesLeft = self.numberOfParallelLinesLeftSetting.state - 1,
 			grassType = self.grassTypeSetting.state or 1,
-			shrubType = self.shrubTypeSetting.state or 1,
+			treeType32 = self.treeType32Setting.state or 1,
 			treeType16 = self.treeType16Setting.state or 1,
 			treeType8 = self.treeType8Setting.state or 1,
 			treeType4 = self.treeType4Setting.state or 1,
-			treeType2 = self.treeType2Setting.state or 1,
-			treeType1 = self.treeType1Setting.state or 1
+			treeType2 = self.treeType2Setting.state or 1
 		}
+		if settings.forwardLength == 0 and settings.reverseLength == 0 then
+			Logging.error("You need to set at least forward length or reverse length > 0")
+			return
+		end
 		printf("Calling callback function with grassType = %s", settings.grassType)
 		self.settings:applySettings(settings)
 	end
@@ -109,14 +117,24 @@ end
 
 function ParallelLineSettingsDialog:initializeValues()
 	-- One-time initialization
-	for i = 50, 5000, 50 do
+	for i = 0, 5000, 50 do
 		table.insert(ParallelLineSettingsDialog.LENGTH_STRINGS, ("%d m"):format(i))
 	end
-	for i = 6, 72 do
-		table.insert(ParallelLineSettingsDialog.STRIP_WIDTH_STRINGS, ("%d m"):format(i))
+	local headlandWidth = {}
+	for i = 0, 72 do
+		table.insert(headlandWidth, ("%d m"):format(i))
 	end
-	for i = 1, 10 do
-		table.insert(ParallelLineSettingsDialog.RESOLUTION_STRINGS, ("%d"):format(i))
+	local stripWidth = {}
+	for i = 6, 72 do
+		table.insert(stripWidth, ("%d m"):format(i))
+	end
+	local keylineWidth = {}
+	for i = 3, 12 do
+		table.insert(keylineWidth, ("%d m"):format(i))
+	end
+	local amountValues = {}
+	for i = 0, 50 do
+		table.insert(amountValues, ("%d"):format(i))
 	end
 	table.insert(ParallelLineSettingsDialog.GRASS_TYPE_STRINGS, "None")
 	local grassLayer = g_currentMission.foliageSystem:getFoliagePaintByName("meadow")
@@ -126,24 +144,25 @@ function ParallelLineSettingsDialog:initializeValues()
 			table.insert(ParallelLineSettingsDialog.GRASS_TYPE_STRINGS, ("Type %d"):format(i))
 		end
 	end
-	-- TODO SHRUB_TYPES
-	ParallelLineSettingsDialog.SHRUB_TYPE_STRINGS = { "Not Supported" }
 
 	table.insert(ParallelLineSettingsDialog.TREE_TYPE_STRINGS, "None")
 	for i, treeType in ipairs(g_treePlantManager.treeTypes) do
 		table.insert(ParallelLineSettingsDialog.TREE_TYPE_STRINGS, treeType.name)
 	end
 
-	self.lengthSetting:setTexts(ParallelLineSettingsDialog.LENGTH_STRINGS)
-	self.stripWidthSetting:setTexts(ParallelLineSettingsDialog.STRIP_WIDTH_STRINGS)
-	self.resolutionSetting:setTexts(ParallelLineSettingsDialog.RESOLUTION_STRINGS)
+	self.forwardLengthSetting:setTexts(ParallelLineSettingsDialog.LENGTH_STRINGS)
+	self.reverseLengthSetting:setTexts(ParallelLineSettingsDialog.LENGTH_STRINGS)
+	self.headlandWidthSetting:setTexts(headlandWidth)
+	self.stripWidthSetting:setTexts(stripWidth)
+	self.keylineWidthSetting:setTexts(keylineWidth)
+	self.numberOfParallelLinesRightSetting:setTexts(amountValues)
+	self.numberOfParallelLinesLeftSetting:setTexts(amountValues)
 	self.grassTypeSetting:setTexts(ParallelLineSettingsDialog.GRASS_TYPE_STRINGS)
-	self.shrubTypeSetting:setTexts(ParallelLineSettingsDialog.SHRUB_TYPE_STRINGS)
+	self.treeType32Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
 	self.treeType16Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
 	self.treeType8Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
 	self.treeType4Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
 	self.treeType2Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
-	self.treeType1Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
 end
 
 ---Displays the dialog
@@ -154,16 +173,19 @@ function ParallelLineSettingsDialog:show()
 end
 
 function ParallelLineSettingsDialog:applySettings(settings)
-	self.lengthSetting:setState(settings.length / ParallelLineSettingsDialog.LENGTH_STEP)
-	self.stripWidthSetting:setState(settings.stripWidth)
-	self.resolutionSetting:setState(settings.resolution)
+	self.forwardLengthSetting:setState((settings.forwardLength / ParallelLineSettingsDialog.LENGTH_STEP) + 1)
+	self.reverseLengthSetting:setState((settings.reverseLength / ParallelLineSettingsDialog.LENGTH_STEP) + 1)
+	self.headlandWidthSetting:setState(settings.headlandWidth + 1)
+	self.stripWidthSetting:setState(settings.stripWidth - 6 + 1)
+	self.keylineWidthSetting:setState(settings.keylineWidth - 3 + 1)
+	self.numberOfParallelLinesRightSetting:setState(settings.numberOfParallelLinesRight + 1)
+	self.numberOfParallelLinesLeftSetting:setState(settings.numberOfParallelLinesLeft + 1)
 	self.grassTypeSetting:setState(settings.grassType)
-	self.shrubTypeSetting:setState(settings.shrubType)
+	self.treeType32Setting:setState(settings.treeType32)
 	self.treeType16Setting:setState(settings.treeType16)
 	self.treeType8Setting:setState(settings.treeType8)
 	self.treeType4Setting:setState(settings.treeType4)
 	self.treeType2Setting:setState(settings.treeType2)
-	self.treeType1Setting:setState(settings.treeType1)
 end
 
 function ParallelLineSettingsDialog:onFrameOpen(element)

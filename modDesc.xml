@@ -12,9 +12,6 @@
     <multiplayer supported="true" />
     <extraSourceFiles>
         <sourceFile filename="scripts/KeylineCalculation.lua" />
-        <sourceFile filename="scripts/ParallelCurveCalculation.lua" />
-        <sourceFile filename="scripts/ParallelLineAlgorithm.lua" />
-        <sourceFile filename="scripts/ConstructionBrushKeyline.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLines.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLinesSettings.lua" />
         <sourceFile filename="scripts/ExportImportInterface.lua" />

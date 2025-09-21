@@ -1,5 +1,8 @@
 use cavalier_contours::polyline::*;
 use yaserde_derive::{YaDeserialize, YaSerialize};
+use notify::{Event, Result, Watcher};
+use std::path::Path;
+use std::sync::mpsc;
 
 // Define structures which match the keyline import and the parallel line export
 #[derive(Debug, YaSerialize, YaDeserialize, PartialEq, Clone)]
@@ -17,12 +20,28 @@ struct FieldBoundary {
 }
 
 #[derive(Debug, YaDeserialize)]
+struct Settings {
+	#[yaserde(rename="headlandWidth", attribute=true)]
+	pub headland_width: u16,
+	#[yaserde(rename="stripWidth", attribute=true)]
+	pub strip_width: u16,
+	#[yaserde(rename="keylineWidth", attribute=true)]
+	pub keyline_width: u16,
+	#[yaserde(rename="numLinesRight", attribute=true)]
+	pub num_lines_right: u16,
+	#[yaserde(rename="numLinesLeft", attribute=true)]
+	pub num_lines_left: u16,
+}
+
+#[derive(Debug, YaDeserialize)]
 #[yaserde(rename="keylines")]
 struct Keylines {
 	#[yaserde(rename="keyline")]
 	keylines: Vec<Keyline>,
 	#[yaserde(rename="fieldBoundary")]
-	field_boundary: FieldBoundary
+	field_boundary: FieldBoundary,
+	#[yaserde(rename="settings")]
+	settings: Settings,
 }
 
 #[derive(Debug, YaDeserialize)]
@@ -133,29 +152,47 @@ fn split_lines_inside_polygon(parallel_lines: &ParallelLines, boundary_polygon: 
 	new_parallel_lines
 }
 
-
-fn main() {
-	let args: Vec<String> = std::env::args().collect();
-	let savegame_id = &args[1];
-	let strip_width = &args[2].parse::<u16>().unwrap();
-	let keyline_width = &args[3].parse::<u16>().unwrap();
-	let num_lines_left = &args[4].parse::<u16>().unwrap();
-	let num_lines_right = &args[5].parse::<u16>().unwrap();
-	println!("Savegame ID: {}, Strip Width: {}, Keyline Width: {}, Num lines left: {}, Num lines right: {}", savegame_id, strip_width, keyline_width, num_lines_left, num_lines_right);
-
-	// Get the path to the user directory
-	let user_dir = std::env::var("USERPROFILE").unwrap();
-	// Build the path to the FS25 save game directories
-	let savegame_path = format!("{}/Documents/My Games/FarmingSimulator2025/savegame{}", user_dir, savegame_id);
-	println!("Savegame path: {}", savegame_path);
-
-	// Check for the existence of a keylines.xml file
-	let keylines_path = format!("{}/keylines.xml", savegame_path);
-	if !std::path::Path::new(&keylines_path).exists() {
-		println!("No keylines.xml file found in the savegame directory.");
-		return;
+fn resample_line_to_equal_spacing(coords: &Vec<Coords>, spacing: f64) -> Vec<Coords> {
+	let mut new_coords = Vec::new();
+	if coords.len() < 2 {
+		return new_coords;
 	}
+	let first_coord = &coords[0];
+	new_coords.push(Coords { x: first_coord.x, z: first_coord.z });
+	let mut last_length: f64 = 0.0;
+	for i in 0..coords.len() - 1 {
+		let x = coords[i].x;
+		let z = coords[i].z;
+		let next_x = coords[i + 1].x;
+		let next_z = coords[i + 1].z;
+		let dx = next_x - x;
+		let dz = next_z - z;
 
+		let mut segment_length = (dx * dx + dz * dz).sqrt();
+		if segment_length == 0.0 {
+			continue;
+		}
+
+		segment_length += last_length;
+
+		let num_segments = (segment_length / spacing).floor() as usize;
+		let step_x = dx / segment_length * spacing;
+		let step_z = dz / segment_length * spacing;
+
+		for j in 1..=num_segments {
+			let new_x = x + step_x * j as f64;
+			let new_z = z + step_z * j as f64;
+			new_coords.push(Coords { x: new_x, z: new_z });
+		}
+
+		last_length = segment_length - num_segments as f64 * spacing;
+	}
+	let last_coord = coords.last().unwrap();
+	new_coords.push(Coords { x: last_coord.x, z: last_coord.z });
+	new_coords
+}
+
+fn process_keylines_xml(keylines_path: &str, savegame_path: &str) {
 	// Deserialize the keylines.xml file
 	let keylines_file = std::fs::File::open(&keylines_path).expect("Failed to open keylines.xml");
 	let mut keylines: Keylines = yaserde::de::from_reader(keylines_file).expect("Failed to parse keylines.xml");
@@ -173,6 +210,15 @@ fn main() {
 		coord.z = (coord.z * 100000.0).round() / 100000.0;
 	}
 
+	// Get settings from keylines
+	let headland_width = &keylines.settings.headland_width;
+	let strip_width = &keylines.settings.strip_width;
+	let keyline_width = &keylines.settings.keyline_width;
+	let num_lines_right = &keylines.settings.num_lines_right;
+	let num_lines_left = &keylines.settings.num_lines_left;
+	println!("Genereting parallel lines with the following settings:");
+	println!("Headland width: {}, Strip width: {}, Keyline width: {}", headland_width, strip_width, keyline_width);
+
 	// Generate parallel lines to the keyline
 	let parallel_lines1 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_right, strip_width + keyline_width, 1);
 	let parallel_lines2 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_left, strip_width + keyline_width, -1);
@@ -181,7 +227,7 @@ fn main() {
 	parallel_lines.parallel_lines.extend(parallel_lines2.parallel_lines);
 	parallel_lines.parallel_lines.push(ParallelLine { coords: keylines.keylines[0].coords.clone() });
 
-	let parallel_boundary = generate_parallel_lines(&keylines.field_boundary.coords, 1, *strip_width, 1);
+	let parallel_boundary = generate_parallel_lines(&keylines.field_boundary.coords, 1, *headland_width, 1);
 
 	// Cut away any points which are outside of the polygon defined by parallel_boundary.
 	// If points were cut off, but then new points are inside the polygon again, split the line into multiple lines
@@ -190,50 +236,7 @@ fn main() {
 
 	// For every parallel line, redefine the coordinates so they all have an equal spacing of 1 unit
 	for pline in &mut parallel_lines.parallel_lines {
-		let mut new_coords = Vec::new();
-		if pline.coords.len() < 2 {
-			continue;
-		}
-		let first_coord = &pline.coords[0];
-		new_coords.push(Coords { x: first_coord.x, z: first_coord.z });
-		let mut last_length: f64 = 0.0;
-		for i in 0..pline.coords.len() - 1 {
-			// Get the current point and the direction to the next one
-			let x = pline.coords[i].x;
-			let z = pline.coords[i].z;
-			let next_x = pline.coords[i + 1].x;
-			let next_z = pline.coords[i + 1].z;
-			let dx = next_x - x;
-			let dz = next_z - z;
-
-			// Find out how long the segment is
-			let mut segment_length = (dx * dx + dz * dz).sqrt();
-			if segment_length == 0.0 {
-				continue;
-			}
-
-			// Add the length which might be left over from the previous segment
-			segment_length += last_length;
-
-			// Determine how many 1 unit segments fit into this segment
-			let num_segments = segment_length.floor() as usize;
-			let step_x = dx / segment_length;
-			let step_z = dz / segment_length;
-
-			// Add the new points
-			for j in 1..=num_segments {
-				let new_x = x + step_x * j as f64;
-				let new_z = z + step_z * j as f64;
-				new_coords.push(Coords { x: new_x, z: new_z });
-			}
-
-			// Store the length which is left over for the next segment
-			last_length = segment_length - num_segments as f64;
-		}
-		// Ensure the last point is included
-		let last_coord = pline.coords.last().unwrap();
-		new_coords.push(Coords { x: last_coord.x, z: last_coord.z });
-		pline.coords = new_coords;
+		pline.coords = resample_line_to_equal_spacing(&pline.coords, 1.0);
 	}
 
 	// Serialize the parallel lines to parallel_lines.xml
@@ -245,4 +248,46 @@ fn main() {
 	};
 	yaserde::ser::serialize_with_writer(&parallel_lines, &mut parallel_lines_file, &yaserde_cfg).expect("Failed to write parallel_lines.xml");
 	println!("Wrote {} parallel lines to parallel_lines.xml", parallel_lines.parallel_lines.len());
+}
+
+fn main() -> Result<()>{
+	let args: Vec<String> = std::env::args().collect();
+	let savegame_id = &args[1];
+	println!("Savegame ID: {}", savegame_id);
+
+	// Get the path to the user directory
+	let user_dir = std::env::var("USERPROFILE").unwrap();
+	// Build the path to the FS25 save game directories
+	let savegame_path = format!("{}/Documents/My Games/FarmingSimulator2025/savegame{}", user_dir, savegame_id);
+	println!("Savegame path: {}", savegame_path);
+
+	// Find the keylines.xml and watch for changes, even if it doesn't exist yet
+	let keylines_path = format!("{}/keylines.xml", savegame_path);
+	let (tx, rx) = mpsc::channel::<Result<Event>>();
+	let mut keylines_watcher = notify::recommended_watcher(tx)?;
+
+	keylines_watcher.watch(Path::new(&keylines_path), notify::RecursiveMode::NonRecursive)?;
+	// Watch for changes indefinitely
+	// Note that Farming Simulator causes to Modify(Any) events, with identical flags,
+	// so we need to skip each first event
+	let mut skip_event = true;
+	for res in rx {
+		if skip_event {
+			skip_event = false;
+		} else {
+			skip_event = true;
+			match res {
+				Ok(_event) => {
+					if let Err(e) = std::panic::catch_unwind(|| {
+						process_keylines_xml(&keylines_path, &savegame_path)
+					}) {
+						println!("Failed generating keylines. Try another location: {:?}", e);
+					}
+				}
+				Err(e) => println!("watch error: {:?}", e),
+			}
+		}
+	}
+
+	Ok(())
 }

@@ -14,6 +14,11 @@ g_xmlManager:addInitSchemaFunction(function()
 	ExportImportInterface.exportSchema:register(XMLValueType.FLOAT, "keylines.keyline(?).coords(?)#z", "Z coordinate", nil, true)
 	ExportImportInterface.exportSchema:register(XMLValueType.FLOAT, "keylines.fieldBoundary.coords(?)#z", "Z coordinate", nil, true)
 	ExportImportInterface.exportSchema:register(XMLValueType.FLOAT, "keylines.fieldBoundary.coords(?)#z", "Z coordinate", nil, true)
+	ExportImportInterface.exportSchema:register(XMLValueType.FLOAT, "keylines.settings#headlandWidth", "Headland Width", nil, true)
+	ExportImportInterface.exportSchema:register(XMLValueType.FLOAT, "keylines.settings#stripWidth", "Strip Width", nil, true)
+	ExportImportInterface.exportSchema:register(XMLValueType.FLOAT, "keylines.settings#keylineWidth", "Keyline Width", nil, true)
+	ExportImportInterface.exportSchema:register(XMLValueType.INT, "keylines.settings#numLinesRight", "Number of Parallel Lines Right", nil, true)
+	ExportImportInterface.exportSchema:register(XMLValueType.INT, "keylines.settings#numLinesLeft", "Number of Parallel Lines Left", nil, true)
 
 	ExportImportInterface.importSchema:register(XMLValueType.FLOAT, "parallelLines.parallelLine(?).coords(?)#x", "X coordinate", nil, true)
 	ExportImportInterface.importSchema:register(XMLValueType.FLOAT, "parallelLines.parallelLine(?).coords(?)#z", "Z coordinate", nil, true)
@@ -33,6 +38,13 @@ function XmlExporter:writeToXml(courseField, success)
 		Logging.error("Failed exporting keylines to XML")
 		return
 	end
+
+	-- Write settings to XML
+	xmlFile:setUInt("keylines.settings#numLinesRight", self.settings.numberOfParallelLinesRight)
+	xmlFile:setUInt("keylines.settings#numLinesLeft", self.settings.numberOfParallelLinesLeft)
+	xmlFile:setUInt("keylines.settings#headlandWidth", self.settings.headlandWidth)
+	xmlFile:setUInt("keylines.settings#stripWidth", self.settings.stripWidth)
+	xmlFile:setUInt("keylines.settings#keylineWidth", self.settings.keylineWidth)
 
 	-- Write keyline coordinates to XML (currently only a single keyline)
 	local xmlKey = ("keylines.keyline(0)")
@@ -63,7 +75,7 @@ function XmlExporter:update(dt)
 	end
 end
 
-function ExportImportInterface.exportKeylines(keylines)
+function ExportImportInterface.exportKeylines(keylines, settings)
 	-- Combine both keyline directions into a single unidirectional line
 	-- We skip the initial point on the second line since it's already in the first line
 	local combinedKeyline = {}
@@ -77,6 +89,7 @@ function ExportImportInterface.exportKeylines(keylines)
 	-- Get the field boundaries and write to XML once that's done
 	local x, z = keylines[1][1].x, keylines[1][1].z
 	writerInstance.combinedKeyline = combinedKeyline
+	writerInstance.settings = settings
 	-- Use default settings - we are only interested in the field boundary anyway
 	local fieldCourseSettings = FieldCourseSettings.new()
 

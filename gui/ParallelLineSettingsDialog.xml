@@ -11,10 +11,16 @@
 			<ThreePartBitmap profile="fs25_lineSeparatorTop" absoluteSizeOffset="100px 0px" position="0px -80px"/>
 			<ScrollingLayout profile="fs25_settingsLayout" id="settingsLayout" topClipperElementName="topClipper" bottomClipperElementName="bottomClipper" position="20px -100px" width="1160px" height="720px">
 				<GuiElement profile="kd_multiTextOptionWrapper">
-					<MultiTextOption profile="kd_multiTextOption" id="lengthSetting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="lengthSettingToolTip" text="The maximum length of the keyline in meters"/>
+					<MultiTextOption profile="kd_multiTextOption" id="forwardLengthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="forwardLengthSettingToolTip" text="The maximum length of the keyline in meters in positive X/Y direction"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="lengthSettingTitle" text="Max. Keyline Length"/>
+					<Text profile="kd_multiTextTitle" id="forwardLengthSettingTitle" text="Max. Forward Keyline Length"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="reverseLengthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="reverseLengthSettingToolTip" text="The maximum length of the keyline in meters in negative X/Y direction"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="reverseLengthSettingTitle" text="Max. Reverse Keyline Length"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="stripWidthSetting">
@@ -23,52 +29,64 @@
 					<Text profile="kd_multiTextTitle" id="stripWidthSettingTitle" text="Strip Width"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
-					<MultiTextOption profile="kd_multiTextOption" id="resolutionSetting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="resolutionSettingTooltip" text="The resolution of the keyline, i.e., the distance between individual points"/>
+					<MultiTextOption profile="kd_multiTextOption" id="headlandWidthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="headlandWidthSettingTooltip" text="The width of the headland area"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="resolutionSettingTitle" text="Resolution"/>
+					<Text profile="kd_multiTextTitle" id="headlandWidthSettingTitle" text="Headland Width"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="keylineWidthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="keylineWidthSettingTooltip" text="The width of the keyline (and the parallel lines)"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="keylineWidthSettingTitle" text="Keyline Width"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="numberOfParallelLinesRightSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="numberOfParallelLinesRightSettingTooltip" text="The number of parallel lines to the right of the keyline"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="numberOfParallelLinesRightSettingTitle" text="Number of Parallel Lines (Right)"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="numberOfParallelLinesLeftSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="numberOfParallelLinesLeftSettingTooltip" text="The number of parallel lines to the left of the keyline"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="numberOfParallelLinesLeftSettingTitle" text="Number of Parallel Lines (Left)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="grassTypeSetting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="grassTypeSettingTooltip" text="The type of grass to be planted"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="grassTypeSettingTooltip" text="The type of grass to be planted (not all types can be planted - you'll have to experiment)"/>
 					</MultiTextOption>
 					<Text profile="kd_multiTextTitle" id="grassTypeSettingTitle" text="Grass Type"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
-					<MultiTextOption profile="kd_multiTextOption" id="shrubTypeSetting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="shrubTypeSettingTooltip" text="The type of shrubs to be planted"/>
+					<MultiTextOption profile="kd_multiTextOption" id="treeType32Setting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType32SettingTooltip" text="The type of trees to be planted every 32 meters (first priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="shrubTypeSettingTitle" text="Shrub Type"/>
+					<Text profile="kd_multiTextTitle" id="treeType32SettingTitle" text="Tree Type 1 (every 32m)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType16Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType16SettingTooltip" text="The type of trees to be planted every 32 meters (first priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType16SettingTooltip" text="The type of trees to be planted every 16 meters (second priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType16SettingTitle" text="Tree Type 1 (every 32m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType16SettingTitle" text="Tree Type 2 (every 16m)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType8Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType8SettingTooltip" text="The type of trees to be planted every 16 meters (second priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType8SettingTooltip" text="The type of trees to be planted every 8 meters (third priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType8SettingTitle" text="Tree Type 2 (every 16m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType8SettingTitle" text="Tree Type 3 (every 8m)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType4Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType4SettingTooltip" text="The type of trees to be planted every 8 meters (third priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType4SettingTooltip" text="The type of trees to be planted every 4 meters (fourth priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType4SettingTitle" text="Tree Type 3 (every 8m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType4SettingTitle" text="Tree Type 4 (every 4m)"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType2Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType2SettingTooltip" text="The type of trees to be planted every 4 meters (fourth priority)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType2SettingTooltip" text="The type of trees to be planted every 2 meters (fifth priority)"/>
 					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType2SettingTitle" text="Tree Type 4 (every 4m)"/>
-				</GuiElement>
-				<GuiElement profile="kd_multiTextOptionWrapper">
-					<MultiTextOption profile="kd_multiTextOption" id="treeType1Setting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeType1SettingTooltip" text="The type of trees to be planted every 2 meters (fifth priority)"/>
-					</MultiTextOption>
-					<Text profile="kd_multiTextTitle" id="treeType1SettingTitle" text="Tree Type 5 (every 2m)"/>
+					<Text profile="kd_multiTextTitle" id="treeType2SettingTitle" text="Tree Type 5 (every 2m)"/>
 				</GuiElement>
 			</ScrollingLayout>
 		</GuiElement>
