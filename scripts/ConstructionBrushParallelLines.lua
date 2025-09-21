@@ -145,7 +145,7 @@ function ConstructionBrushParallelLines:update(dt)
 			if y1 == nil or y2 == nil then
 				break
 			end
-			DebugUtil.drawDebugLine(x1, y1 + 0.3, z1, x2, y2 + 0.3, z2, color[1], color[2], color[3], 0)
+			DebugUtil.drawDebugLine(x1, y1 + 1, z1, x2, y2 + 1, z2, color[1], color[2], color[3], 0)
 
 			--Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i-1), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
 

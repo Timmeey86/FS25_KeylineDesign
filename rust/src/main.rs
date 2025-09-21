@@ -3,6 +3,7 @@ use yaserde_derive::{YaDeserialize, YaSerialize};
 use notify::{Event, Result, Watcher};
 use std::path::Path;
 use std::sync::mpsc;
+use std::io::{Write};
 
 // Define structures which match the keyline import and the parallel line export
 #[derive(Debug, YaSerialize, YaDeserialize, PartialEq, Clone)]
@@ -251,15 +252,18 @@ fn process_keylines_xml(keylines_path: &str, savegame_path: &str) {
 }
 
 fn main() -> Result<()>{
-	let args: Vec<String> = std::env::args().collect();
-	let savegame_id = &args[1];
-	println!("Savegame ID: {}", savegame_id);
+	// Ask for the savegame slot number through standard in
+	print!("Enter savegame slot number: ");
+	std::io::stdout().flush()?;
+	let mut savegame_id = String::new();
+	std::io::stdin().read_line(&mut savegame_id)?;
+	let savegame_id = savegame_id.trim();
 
 	// Get the path to the user directory
 	let user_dir = std::env::var("USERPROFILE").unwrap();
 	// Build the path to the FS25 save game directories
 	let savegame_path = format!("{}/Documents/My Games/FarmingSimulator2025/savegame{}", user_dir, savegame_id);
-	println!("Savegame path: {}", savegame_path);
+	println!("Listening for changes on: {}", savegame_path);
 
 	// Find the keylines.xml and watch for changes, even if it doesn't exist yet
 	let keylines_path = format!("{}/keylines.xml", savegame_path);
