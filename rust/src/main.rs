@@ -262,12 +262,17 @@ fn main() -> Result<()>{
 	// Get the path to the user directory
 	let user_dir = std::env::var("USERPROFILE").unwrap();
 	// Build the path to the FS25 save game directories
-	let savegame_path = format!("{}/Documents/My Games/FarmingSimulator2025/savegame{}", user_dir, savegame_id);
-	println!("Listening for changes on: {}", savegame_path);
+	let savegame_path = format!(r"{}\Documents\My Games\FarmingSimulator2025\savegame{}", user_dir, savegame_id);
 
 	// Find the keylines.xml and watch for changes, even if it doesn't exist yet
-	let keylines_path = format!("{}/keylines.xml", savegame_path);
+	let keylines_path = format!(r"{}\keylines.xml", savegame_path);
+	println!("Listening for changes on: {}", keylines_path);
 	let (tx, rx) = mpsc::channel::<Result<Event>>();
+	// Create the keylines.xml file if it doesn't exist
+	if !Path::new(&keylines_path).exists() {
+		std::fs::File::create(&keylines_path).expect("Failed to create keylines.xml");
+	}
+	// 
 	let mut keylines_watcher = notify::recommended_watcher(tx)?;
 
 	keylines_watcher.watch(Path::new(&keylines_path), notify::RecursiveMode::NonRecursive)?;

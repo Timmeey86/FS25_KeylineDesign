@@ -1,5 +1,5 @@
 ---This class creates a dialog based on the matching XML flie and handles interactions in this dialog
----@class ParallelLineSettingsDialog
+---@class ParallelLineSettingsDialogTree
 ---@field forwardLengthSetting table @The UI element for the forward length setting
 ---@field reverseLengthSetting table @The UI element for the reverse length setting
 ---@field headlandWidthSetting table @The UI element for the headland width setting
@@ -15,8 +15,8 @@
 ---@field treeType2Setting table @The UI element for the tree type 2 setting
 ---@field settings ConstructionBrushParallelLinesSettings @The settings object which will be updated when the user presses "yes"
 
-ParallelLineSettingsDialog = {
-	DIALOG_ID = "ParallelLineSettingsDialog",
+ParallelLineSettingsDialogTree = {
+	DIALOG_ID = "ParallelLineSettingsDialogTree",
 	LENGTH_STRINGS = {},
 	RESOLUTION_STRINGS = {},
 	GRASS_TYPE_STRINGS = {},
@@ -26,33 +26,33 @@ ParallelLineSettingsDialog = {
 
 
 -- Inherit from a yes/no dialog which is the closest base to what we want
-local ParallelLineSettingsDialog_mt = Class(ParallelLineSettingsDialog, YesNoDialog)
+local ParallelLineSettingsDialog_mt = Class(ParallelLineSettingsDialogTree, YesNoDialog)
 
 ---Creates a new instance
 ---@param settings table @The settings object which will be used to initialize the dialog and which will be updated when the user presses "yes"
----@return ParallelLineSettingsDialog @The new instance
-function ParallelLineSettingsDialog.new(settings)
+---@return ParallelLineSettingsDialogTree @The new instance
+function ParallelLineSettingsDialogTree.new(settings)
 	local self = YesNoDialog.new(nil, ParallelLineSettingsDialog_mt)
 	self.target = self
 
 	-- Forward the yes/no click to this class, which will then only forward it to the callback target in the "yes" case
-	self:setCallback(ParallelLineSettingsDialog.onYesNo, self)
+	self:setCallback(ParallelLineSettingsDialogTree.onYesNo, self)
 	self.settings = settings
 
 	return self
 end
 
 local instance
-function ParallelLineSettingsDialog.createInstance(settings)
-	instance = ParallelLineSettingsDialog.new(settings)
+function ParallelLineSettingsDialogTree.createInstance(settings)
+	instance = ParallelLineSettingsDialogTree.new(settings)
 	return instance
 end
 
-function ParallelLineSettingsDialog.getInstance()
+function ParallelLineSettingsDialogTree.getInstance()
 	return instance
 end
 
-function ParallelLineSettingsDialog:delete()
+function ParallelLineSettingsDialogTree:delete()
 	if self.isOpen then
 		self:close()
 	end
@@ -64,17 +64,17 @@ function ParallelLineSettingsDialog:delete()
 	instance = nil
 
 	-- Fixes bugs with keyboard focus
-	FocusManager.guiFocusData["ParallelLineSettingsDialog"] = {
+	FocusManager.guiFocusData["ParallelLineSettingsDialogTree"] = {
 		idToElementMapping = {}
 	}
 end
 
-function ParallelLineSettingsDialog:reload()
+function ParallelLineSettingsDialogTree:reload()
 	g_gui.currentlyReloading = true
 
 	local settingsObject = self.settingsObject
 	self:delete()
-	self = ParallelLineSettingsDialog.createInstance(settingsObject)
+	self = ParallelLineSettingsDialogTree.createInstance(settingsObject)
 	self:register()
 
 	g_gui.currentlyReloading = false
@@ -82,18 +82,18 @@ function ParallelLineSettingsDialog:reload()
 	self:show()
 end
 ---Registers the dialog with g_gui
-function ParallelLineSettingsDialog:register()
-	local xmlPath = Utils.getFilename("gui/ParallelLineSettingsDialog.xml", MOD_DIR)
-	g_gui:loadGui(xmlPath, ParallelLineSettingsDialog.DIALOG_ID, self)
+function ParallelLineSettingsDialogTree:register()
+	local xmlPath = Utils.getFilename("gui/ParallelLineSettingsDialogTree.xml", MOD_DIR)
+	g_gui:loadGui(xmlPath, ParallelLineSettingsDialogTree.DIALOG_ID, self)
 end
 
 ---Reacts on yes/no presses and calls the callback function which was supplied to the constructor, in the yes case
 ---@param yesWasPressed boolean @True if yes was pressed, false otherwise
-function ParallelLineSettingsDialog:onYesNo(yesWasPressed)
+function ParallelLineSettingsDialogTree:onYesNo(yesWasPressed)
 	if yesWasPressed then
 		local settings = {
-			forwardLength = (self.forwardLengthSetting.state - 1) * ParallelLineSettingsDialog.LENGTH_STEP,
-			reverseLength = (self.reverseLengthSetting.state - 1) * ParallelLineSettingsDialog.LENGTH_STEP,
+			forwardLength = (self.forwardLengthSetting.state - 1) * ParallelLineSettingsDialogTree.LENGTH_STEP,
+			reverseLength = (self.reverseLengthSetting.state - 1) * ParallelLineSettingsDialogTree.LENGTH_STEP,
 			headlandWidth = self.headlandWidthSetting.state - 1,
 			stripWidth = self.stripWidthSetting.state + 6 - 1,
 			keylineWidth = self.keylineWidthSetting.state + 3 - 1,
@@ -115,10 +115,10 @@ function ParallelLineSettingsDialog:onYesNo(yesWasPressed)
 	end
 end
 
-function ParallelLineSettingsDialog:initializeValues()
+function ParallelLineSettingsDialogTree:initializeValues()
 	-- One-time initialization
 	for i = 0, 5000, 50 do
-		table.insert(ParallelLineSettingsDialog.LENGTH_STRINGS, ("%d m"):format(i))
+		table.insert(ParallelLineSettingsDialogTree.LENGTH_STRINGS, ("%d m"):format(i))
 	end
 	local headlandWidth = {}
 	for i = 0, 72 do
@@ -136,45 +136,45 @@ function ParallelLineSettingsDialog:initializeValues()
 	for i = 0, 50 do
 		table.insert(amountValues, ("%d"):format(i))
 	end
-	table.insert(ParallelLineSettingsDialog.GRASS_TYPE_STRINGS, "None")
+	table.insert(ParallelLineSettingsDialogTree.GRASS_TYPE_STRINGS, "None")
 	local grassLayer = g_currentMission.foliageSystem:getFoliagePaintByName("meadow")
 	if grassLayer then
 		local maxValue = 2^grassLayer.numStateChannels-1
 		for i = 1, maxValue do
-			table.insert(ParallelLineSettingsDialog.GRASS_TYPE_STRINGS, ("Type %d"):format(i))
+			table.insert(ParallelLineSettingsDialogTree.GRASS_TYPE_STRINGS, ("Type %d"):format(i))
 		end
 	end
 
-	table.insert(ParallelLineSettingsDialog.TREE_TYPE_STRINGS, "None")
+	table.insert(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS, "None")
 	for i, treeType in ipairs(g_treePlantManager.treeTypes) do
-		table.insert(ParallelLineSettingsDialog.TREE_TYPE_STRINGS, treeType.name)
+		table.insert(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS, treeType.name)
 	end
 
-	self.forwardLengthSetting:setTexts(ParallelLineSettingsDialog.LENGTH_STRINGS)
-	self.reverseLengthSetting:setTexts(ParallelLineSettingsDialog.LENGTH_STRINGS)
+	self.forwardLengthSetting:setTexts(ParallelLineSettingsDialogTree.LENGTH_STRINGS)
+	self.reverseLengthSetting:setTexts(ParallelLineSettingsDialogTree.LENGTH_STRINGS)
 	self.headlandWidthSetting:setTexts(headlandWidth)
 	self.stripWidthSetting:setTexts(stripWidth)
 	self.keylineWidthSetting:setTexts(keylineWidth)
 	self.numberOfParallelLinesRightSetting:setTexts(amountValues)
 	self.numberOfParallelLinesLeftSetting:setTexts(amountValues)
-	self.grassTypeSetting:setTexts(ParallelLineSettingsDialog.GRASS_TYPE_STRINGS)
-	self.treeType32Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
-	self.treeType16Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
-	self.treeType8Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
-	self.treeType4Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
-	self.treeType2Setting:setTexts(ParallelLineSettingsDialog.TREE_TYPE_STRINGS)
+	self.grassTypeSetting:setTexts(ParallelLineSettingsDialogTree.GRASS_TYPE_STRINGS)
+	self.treeType32Setting:setTexts(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS)
+	self.treeType16Setting:setTexts(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS)
+	self.treeType8Setting:setTexts(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS)
+	self.treeType4Setting:setTexts(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS)
+	self.treeType2Setting:setTexts(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS)
 end
 
 ---Displays the dialog
-function ParallelLineSettingsDialog:show()
+function ParallelLineSettingsDialogTree:show()
 	self:applySettings(self.settings)
 	self:setDialogType(DialogElement.TYPE_QUESTION)
-	g_gui:showDialog(ParallelLineSettingsDialog.DIALOG_ID)
+	g_gui:showDialog(ParallelLineSettingsDialogTree.DIALOG_ID)
 end
 
-function ParallelLineSettingsDialog:applySettings(settings)
-	self.forwardLengthSetting:setState((settings.forwardLength / ParallelLineSettingsDialog.LENGTH_STEP) + 1)
-	self.reverseLengthSetting:setState((settings.reverseLength / ParallelLineSettingsDialog.LENGTH_STEP) + 1)
+function ParallelLineSettingsDialogTree:applySettings(settings)
+	self.forwardLengthSetting:setState((settings.forwardLength / ParallelLineSettingsDialogTree.LENGTH_STEP) + 1)
+	self.reverseLengthSetting:setState((settings.reverseLength / ParallelLineSettingsDialogTree.LENGTH_STEP) + 1)
 	self.headlandWidthSetting:setState(settings.headlandWidth + 1)
 	self.stripWidthSetting:setState(settings.stripWidth - 6 + 1)
 	self.keylineWidthSetting:setState(settings.keylineWidth - 3 + 1)
@@ -188,6 +188,6 @@ function ParallelLineSettingsDialog:applySettings(settings)
 	self.treeType2Setting:setState(settings.treeType2)
 end
 
-function ParallelLineSettingsDialog:onFrameOpen(element)
-	ParallelLineSettingsDialog:superClass().onFrameOpen(self)
+function ParallelLineSettingsDialogTree:onFrameOpen(element)
+	ParallelLineSettingsDialogTree:superClass().onFrameOpen(self)
 end
