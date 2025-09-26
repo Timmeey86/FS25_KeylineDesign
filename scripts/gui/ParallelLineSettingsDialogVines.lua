@@ -112,7 +112,7 @@ function ParallelLineSettingsDialogVines:initializeValues()
 		table.insert(stripWidth, ("%d m"):format(i))
 	end
 	local amountValues = {}
-	for i = 0, 50 do
+	for i = 0, 200 do
 		table.insert(amountValues, ("%d"):format(i))
 	end
 

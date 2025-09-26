@@ -128,8 +128,13 @@ function KeylineCalculation.drawLines(keylines, exportedKeylines, importedParall
 		local curveData = lines[j]
 		local color = curveData.color
 		local curve = curveData.coords
+		local k = 1
 		for i = 2, #curve do
-			local x1, y1, z1 = curve[i - 1].x, curve[i - 1].y, curve[i - 1].z
+			-- Draw only 10m segments in order to not stress the UI too much
+			if (i - 1) % 10 ~= 0 and i ~= #curve then
+				continue
+			end
+			local x1, y1, z1 = curve[k].x, curve[k].y, curve[k].z
 			local x2, y2, z2 = curve[i].x,  curve[i].y, curve[i].z
 			if y1 == nil or y2 == nil then
 				break
@@ -137,6 +142,8 @@ function KeylineCalculation.drawLines(keylines, exportedKeylines, importedParall
 			DebugUtil.drawDebugLine(x1, y1 + 1, z1, x2, y2 + 1, z2, color[1], color[2], color[3], 0)
 
 			--Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i-1), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
+
+			k = i
 
 		end
 	end

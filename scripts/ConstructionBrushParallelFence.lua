@@ -120,7 +120,7 @@ end
 
 function ConstructionBrushParallelFence:onButtonTertiary()
 	self.importedParallelLines = ExportImportInterface.importParallelLines()
-
+	
 	local first = true
 	self.pendingSegments = {}
 	for _, line in ipairs(self.importedParallelLines) do
