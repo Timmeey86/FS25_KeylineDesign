@@ -120,7 +120,7 @@ end
 
 function ConstructionBrushParallelFence:onButtonTertiary()
 	self.importedParallelLines = ExportImportInterface.importParallelLines()
-	
+
 	local first = true
 	self.pendingSegments = {}
 	for _, line in ipairs(self.importedParallelLines) do
@@ -151,7 +151,7 @@ function ConstructionBrushParallelFence:getButtonSecondaryText()
 	return "Export keyline"
 end
 
-function ConstructionBrushParallelFence:getAxisPrimary()
+function ConstructionBrushParallelFence:getAxisPrimaryText()
 	return "Change angle (1°)"
 end
 function ConstructionBrushParallelFence:getAxisSecondaryText()
