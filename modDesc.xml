@@ -1,12 +1,12 @@
 <?xml version="1.0" standalone="no"?>
 <modDesc descVersion="99" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/NMC-TBone/xml-schema/main/modDesc.xsd">
     <author>Farmsim Tim</author>
-    <version>0.0.0.1</version>
+    <version>0.1.0.0</version>
     <title>
-        <en>Keyline Design</en>
+        <en>Keyline Design (beta)</en>
     </title>
     <description>
-<en><![CDATA[TODO]]></en>
+<en><![CDATA[A mod which allows applying principles of keyline design or agroforestry in FS25 easily.]]></en>
     </description>
     <iconFilename>icon_KeylineDesign.dds</iconFilename>
     <multiplayer supported="true" />

@@ -232,7 +232,7 @@ function ConstructionBrushParallelLines:onButtonTertiary()
 end
 
 function ConstructionBrushParallelLines:getButtonPrimaryText()
-	return "$l10n_input_CONSTRUCTION_PAINT"
+	return "3 - " .. g_i18n:getText("input_CONSTRUCTION_PAINT")
 end
 
 function ConstructionBrushParallelLines:getAxisPrimaryText()
@@ -240,11 +240,11 @@ function ConstructionBrushParallelLines:getAxisPrimaryText()
 end
 
 function ConstructionBrushParallelLines:getButtonSecondaryText()
-	return "Export keyline"
+	return "1 - Export keyline"
 end
 
 function ConstructionBrushParallelLines:getButtonTertiaryText()
-	return "Import parallel lines"
+	return "2 - Import parallel lines"
 end
 
 function ConstructionBrushParallelLines:getAxisSecondaryText()

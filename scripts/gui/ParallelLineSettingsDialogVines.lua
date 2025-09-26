@@ -108,7 +108,7 @@ function ParallelLineSettingsDialogVines:initializeValues()
 		table.insert(headlandWidth, ("%d m"):format(i))
 	end
 	local stripWidth = {}
-	for i = 6, 72 do
+	for i = 0, 72 do
 		table.insert(stripWidth, ("%d m"):format(i))
 	end
 	local amountValues = {}

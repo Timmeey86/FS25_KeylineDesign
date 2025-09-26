@@ -144,11 +144,11 @@ PlaceableVine.onLoad = Utils.prependedFunction(PlaceableVine.onLoad, function(vi
 end)
 
 function ConstructionBrushParallelFence:getButtonPrimaryText()
-	return "Place orchards"
+	return "3 - Place orchards"
 end
 
 function ConstructionBrushParallelFence:getButtonSecondaryText()
-	return "Export keyline"
+	return "1 - Export keyline"
 end
 
 function ConstructionBrushParallelFence:getAxisPrimaryText()
@@ -167,7 +167,7 @@ function ConstructionBrushParallelFence:onAxisSecondary(delta)
 end
 
 function ConstructionBrushParallelFence:getButtonTertiaryText()
-	return "Import parallel lines"
+	return "2 - Import parallel lines"
 end
 
 function ConstructionBrushParallelFence:onOpenSettingsDialog()
