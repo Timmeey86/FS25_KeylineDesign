@@ -13,9 +13,12 @@
     <extraSourceFiles>
         <sourceFile filename="scripts/KeylineCalculation.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLines.lua" />
+        <sourceFile filename="scripts/ConstructionBrushParallelFence.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLinesSettings.lua" />
+        <sourceFile filename="scripts/ConstructionBrushVinesSettings.lua" />
         <sourceFile filename="scripts/ExportImportInterface.lua" />
         <sourceFile filename="scripts/gui/ParallelLineSettingsDialogTree.lua" />
+        <sourceFile filename="scripts/gui/ParallelLineSettingsDialogVines.lua" />
         <sourceFile filename="scripts/KeylineDesign.lua" />
     </extraSourceFiles>
 </modDesc>

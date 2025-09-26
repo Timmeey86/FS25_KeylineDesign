@@ -44,7 +44,7 @@ function XmlExporter:writeToXml(courseField, success)
 	xmlFile:setUInt("keylines.settings#numLinesLeft", self.settings.numberOfParallelLinesLeft)
 	xmlFile:setUInt("keylines.settings#headlandWidth", self.settings.headlandWidth)
 	xmlFile:setUInt("keylines.settings#stripWidth", self.settings.stripWidth)
-	xmlFile:setUInt("keylines.settings#keylineWidth", self.settings.keylineWidth)
+	xmlFile:setUInt("keylines.settings#keylineWidth", self.settings.keylineWidth or 3) -- use 3m for grapes
 
 	-- Write keyline coordinates to XML (currently only a single keyline)
 	local xmlKey = ("keylines.keyline(0)")
@@ -68,7 +68,9 @@ function XmlExporter:writeToXml(courseField, success)
 	xmlFile:save(true)
 	xmlFile:delete()
 end
-Player.update = Utils.appendedFunction(Player.update, function(player, dt) writerInstance:update(dt) end)
+HUD.update = Utils.appendedFunction(HUD.update, function(hud, dt)
+	writerInstance:update(dt)
+end)
 function XmlExporter:update(dt)
 	if self.fieldCourse ~= nil then
 		self.fieldCourse:update(dt, 0.25)
@@ -106,7 +108,7 @@ function ExportImportInterface.importParallelLines()
 	local xmlFile = XMLFile.load("parallelLinesXML", filePath, ExportImportInterface.importSchema)
 	if not xmlFile then
 		Logging.error("Failed importing parallel lines from XML")
-		return
+		return {}
 	end
 
 	-- Add the keylines to the list of all coordinates first

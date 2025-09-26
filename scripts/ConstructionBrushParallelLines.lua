@@ -11,6 +11,7 @@ ConstructionBrushParallelLines.MODES = {
 
 function ConstructionBrushParallelLines.new(subclass_mt, cursor)
 	local self = ConstructionBrushParallelLines:superClass().new(subclass_mt or ConstructionBrushParallelLines_mt, cursor)
+	self.brushIdentifier = "keylines"
 	self.supportsPrimaryButton = true
 	self.supportsPrimaryDragging = false
 	self.requiredPermission = Farm.PERMISSION.LANDSCAPING
@@ -74,30 +75,6 @@ function ConstructionBrushParallelLines:setParameters(groundTypeName)
 	self:setGroundType(groundTypeName)
 end
 
-
--- HSV to RGB conversion function
-local function hsvToRgb(h, s, v)
-	local r, g, b
-
-	local i = math.floor(h * 6)
-	local f = h * 6 - i
-	local p = v * (1 - s)
-	local q = v * (1 - f * s)
-	local t = v * (1 - (1 - f) * s)
-
-	i = i % 6
-
-	if i == 0 then r, g, b = v, t, p
-	elseif i == 1 then r, g, b = q, v, p
-	elseif i == 2 then r, g, b = p, v, t
-	elseif i == 3 then r, g, b = p, q, v
-	elseif i == 4 then r, g, b = t, p, v
-	elseif i == 5 then r, g, b = v, p, q
-	end
-
-	return r, g, b
-end
-
 local delay = 100
 function ConstructionBrushParallelLines:update(dt)
 	ConstructionBrushParallelLines:superClass().update(self, dt)
@@ -105,41 +82,9 @@ function ConstructionBrushParallelLines:update(dt)
 	-- Update just the keyline. The rest is calculated on right-click
 	self:updateKeyline()
 
+	KeylineCalculation.drawLines(self.keylines, self.exportedKeylines, self.importedParallelLines)
+
 	-- Draw all lines
-	local lines = {}
-	for _, keyline in ipairs(self.keylines) do
-		-- Current mouse keyline in red
-		table.insert(lines, { coords = keyline, color = {1, 0, 0} })
-	end
-	for _, keyline in ipairs(self.exportedKeylines) do
-		-- Exported keylines in yellow
-		table.insert(lines, { coords = keyline, color = {1, 1, 0} })
-	end
-	for i = 1, #self.importedParallelLines do
-		local curve = self.importedParallelLines[i]
-		-- Cycle through 24 distinguishable colors based on i
-		local colorIndex = ((i - 1) % 6) + 1
-		local hue = (colorIndex - 1) / 6
-		local r, g, b = hsvToRgb(hue, 1, 1)
-		table.insert(lines, { coords = curve, color = {r, g, b} })
-	end
-	for j = 1, #lines do
-		local curveData = lines[j]
-		local color = curveData.color
-		local curve = curveData.coords
-		for i = 2, #curve do
-			local x1, y1, z1 = curve[i - 1].x, curve[i - 1].y, curve[i - 1].z
-			local x2, y2, z2 = curve[i].x,  curve[i].y, curve[i].z
-			if y1 == nil or y2 == nil then
-				break
-			end
-			DebugUtil.drawDebugLine(x1, y1 + 1, z1, x2, y2 + 1, z2, color[1], color[2], color[3], 0)
-
-			--Utils.renderTextAtWorldPosition(x1, y1 + .4, z1 , string.format("%d", i-1), getCorrectTextSize(0.02), 0,color[1], color[2], color[3], 1)
-
-		end
-	end
-
 	if not self.isProcessingEvents and #self.pendingFoliageEvents > 0 then
 		if delay <= 0 then
 			self.isProcessingEvents = true
@@ -314,7 +259,7 @@ end
 -- Allow opening the settings menu, but in a non-standard way which shows a dialog instead
 ConstructionScreen.registerBrushActionEvents = Utils.appendedFunction(ConstructionScreen.registerBrushActionEvents, function(constructionScreen)
 	-- Make sure we are extending the right brush
-	if constructionScreen.brush and constructionScreen.brush.keylines ~= nil and constructionScreen.brush.importedParallelLines ~= nil then
+	if constructionScreen.brush and constructionScreen.brush.brushIdentifier == "keylines" then
 		printf("Keyline Design: Injecting button for settings dialog")
 		local isValid
 		isValid, constructionScreen.showConfigsEvent = g_inputBinding:registerActionEvent(InputAction.CONSTRUCTION_SHOW_CONFIGS, constructionScreen.brush, constructionScreen.brush.onOpenSettingsDialog, false, true, false, true)

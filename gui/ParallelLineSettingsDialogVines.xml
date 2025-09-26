@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI onOpen="onOpen" onClose="onClose" onCreate="onCreate">
+	<GuiElement profile="newLayer"/>
+	<Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
+	<GuiElement profile="kd_dialogBackground" id="dialogElement" size="1200px 900px">
+		<ThreePartBitmap profile="fs25_dialogBgMiddleSmall"/>
+		<ThreePartBitmap profile="fs25_dialogBgTopSmall"/>
+		<ThreePartBitmap profile="fs25_dialogBgBottom"/>
+		<GuiElement profile="fs25_dialogContentContainer">
+			<Text profile="fs25_dialogTitle" text="Parallel orchard settings" id="dialogTitleElement" position="0px -20px"/>
+			<ThreePartBitmap profile="fs25_lineSeparatorTop" absoluteSizeOffset="100px 0px" position="0px -80px"/>
+			<ScrollingLayout profile="fs25_settingsLayout" id="settingsLayout" topClipperElementName="topClipper" bottomClipperElementName="bottomClipper" position="20px -100px" width="1160px" height="720px">
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="forwardLengthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="forwardLengthSettingToolTip" text="The maximum length of the keyline in meters in positive X/Y direction"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="forwardLengthSettingTitle" text="Max. Forward Keyline Length"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="reverseLengthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="reverseLengthSettingToolTip" text="The maximum length of the keyline in meters in negative X/Y direction"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="reverseLengthSettingTitle" text="Max. Reverse Keyline Length"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="stripWidthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="stripWidthSettingTooltip" text="The width of the harvestable strips"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="stripWidthSettingTitle" text="Strip Width"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="headlandWidthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="headlandWidthSettingTooltip" text="The width of the headland area"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="headlandWidthSettingTitle" text="Headland Width"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="numberOfParallelLinesRightSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="numberOfParallelLinesRightSettingTooltip" text="The number of parallel lines to the right of the keyline"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="numberOfParallelLinesRightSettingTitle" text="Number of Parallel Lines (Right)"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="numberOfParallelLinesLeftSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="numberOfParallelLinesLeftSettingTooltip" text="The number of parallel lines to the left of the keyline"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="numberOfParallelLinesLeftSettingTitle" text="Number of Parallel Lines (Left)"/>
+				</GuiElement>
+			</ScrollingLayout>
+		</GuiElement>
+		<BoxLayout profile="fs25_dialogButtonBox">
+			<Button profile="buttonYes" text="$l10n_button_ok" onClick="onYes" id="yesButton"/>
+			<Bitmap profile="fs25_dialogButtonBoxSeparator"/>
+			<Button profile="buttonNo" text="$l10n_button_cancel" onClick="onNo" id="noButton"/>
+		</BoxLayout>
+	</GuiElement>
+	<GuiProfiles>
+		<Profile name="kd_dialogBackground" extends="fs25_dialogBg">
+			<height value="830px"/>
+		</Profile>
+		<Profile name="kd_text" extends="dialogText" with="anchorBottomCenter">
+			<textColor value="1 1 1 1"/>
+		</Profile>
+		<Profile name="kd_multiTextOptionWrapper" extends="baseReference" with="anchorTopStretchingX">
+			<width  value="570px"/>
+			<height value="50px"/>
+		</Profile>
+		<Profile name="kd_multiTextTitle" extends="fs25_textDefault" with="anchorMiddleLeft">
+			<width    value="570px"/>
+			<textBold value="false"/>
+			<textSize value="18px"/>
+		</Profile>
+		<Profile name="kd_multiTextOption" extends="fs25_settingsMultiTextOption" with="anchorMiddleRight"/>
+		<Profile name="kd_multiTextOptionTooltip" extends="fs25_multiTextOptionTooltip"/>
+	</GuiProfiles>
+</GUI>
