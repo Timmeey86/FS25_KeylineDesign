@@ -47,9 +47,6 @@ function ParallelLineSettingsDialogVines:delete()
 		self:close()
 	end
 
-	-- Force close the current UI
-	g_gui:showGui(nil)
-
 	self:superClass().delete(self)
 	instance = nil
 
@@ -64,6 +61,8 @@ function ParallelLineSettingsDialogVines:reload()
 
 	local settingsObject = self.settingsObject
 	self:delete()
+	-- Force close the current UI
+	g_gui:showGui(nil)
 	self = ParallelLineSettingsDialogVines.createInstance(settingsObject)
 	self:register()
 
@@ -85,7 +84,7 @@ function ParallelLineSettingsDialogVines:onYesNo(yesWasPressed)
 			forwardLength = (self.forwardLengthSetting.state - 1) * ParallelLineSettingsDialogVines.LENGTH_STEP,
 			reverseLength = (self.reverseLengthSetting.state - 1) * ParallelLineSettingsDialogVines.LENGTH_STEP,
 			headlandWidth = self.headlandWidthSetting.state - 1,
-			stripWidth = self.stripWidthSetting.state + 6 - 1,
+			stripWidth = self.stripWidthSetting.state - 1,
 			numberOfParallelLinesRight = self.numberOfParallelLinesRightSetting.state - 1,
 			numberOfParallelLinesLeft = self.numberOfParallelLinesLeftSetting.state - 1
 		}
@@ -135,7 +134,7 @@ function ParallelLineSettingsDialogVines:applySettings(settings)
 	self.forwardLengthSetting:setState((settings.forwardLength / ParallelLineSettingsDialogVines.LENGTH_STEP) + 1)
 	self.reverseLengthSetting:setState((settings.reverseLength / ParallelLineSettingsDialogVines.LENGTH_STEP) + 1)
 	self.headlandWidthSetting:setState(settings.headlandWidth + 1)
-	self.stripWidthSetting:setState(settings.stripWidth - 6 + 1)
+	self.stripWidthSetting:setState(settings.stripWidth + 1)
 	self.numberOfParallelLinesRightSetting:setState(settings.numberOfParallelLinesRight + 1)
 	self.numberOfParallelLinesLeftSetting:setState(settings.numberOfParallelLinesLeft + 1)
 end
