@@ -1,3 +1,4 @@
 debug_*.bat
 rust/target
 **/*.zip
+*.exe

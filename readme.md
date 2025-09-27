@@ -22,7 +22,6 @@ The idea of this mod is that you'll only ever use it to set up a savegame and ra
 11. Press B to display parallel lines to the keyline which was exported
 12. When happy, left click to place the parallel lines. Otherwise, pick a different location and repeat from step 9
 13. When placing grapes, you will experience heavy framedrops. Don't do anything until they are gone.
-14. Note that you currently need to restart the executable after saving
 
 ## Video guide
 

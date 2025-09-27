@@ -4,6 +4,7 @@ use notify::{Event, Result, Watcher};
 use std::path::Path;
 use std::sync::mpsc;
 use std::io::{Write};
+use notify::event::{EventKind, ModifyKind, RemoveKind};
 
 // Define structures which match the keyline import and the parallel line export
 #[derive(Debug, YaSerialize, YaDeserialize, PartialEq, Clone)]
@@ -268,6 +269,7 @@ fn main() -> Result<()>{
 	let keylines_path = format!(r"{}\keylines.xml", savegame_path);
 	println!("Listening for changes on: {}", keylines_path);
 	let (tx, rx) = mpsc::channel::<Result<Event>>();
+	
 	// Create the keylines.xml file if it doesn't exist
 	if !Path::new(&keylines_path).exists() {
 		std::fs::File::create(&keylines_path).expect("Failed to create keylines.xml");
@@ -277,24 +279,47 @@ fn main() -> Result<()>{
 
 	keylines_watcher.watch(Path::new(&keylines_path), notify::RecursiveMode::NonRecursive)?;
 	// Watch for changes indefinitely
-	// Note that Farming Simulator causes to Modify(Any) events, with identical flags,
+	// Note that Farming Simulator causes two Modify(Any) events, with identical flags,
 	// so we need to skip each first event
 	let mut skip_event = true;
 	for res in rx {
-		if skip_event {
-			skip_event = false;
-		} else {
-			skip_event = true;
-			match res {
-				Ok(_event) => {
-					if let Err(e) = std::panic::catch_unwind(|| {
-						process_keylines_xml(&keylines_path, &savegame_path)
-					}) {
-						println!("Failed generating keylines. Try another location: {:?}", e);
+		match res {
+			Ok(event) => {
+
+				match &event.kind {
+					EventKind::Modify(ModifyKind::Any) => {
+						if skip_event {
+							skip_event = false;
+						} else {
+							skip_event = true;
+							if let Err(e) = std::panic::catch_unwind(|| {
+								process_keylines_xml(&keylines_path, &savegame_path)
+							}) {
+								println!("Failed generating keylines. Try another location: {:?}", e);
+							}
+						}
 					}
+					EventKind::Remove(RemoveKind::Any) => {
+						println!("keylines.xml was removed. Waiting 5 seconds, then attempting to recreate...");
+						// wait 5 seconds
+						std::thread::sleep(std::time::Duration::from_secs(5));
+						if let Err(e) = std::fs::File::create(&keylines_path) {
+							println!("Failed to recreate keylines.xml: {:?}", e);
+						} else {
+							// Re-watch the file after recreation
+							if let Err(e) = keylines_watcher.watch(Path::new(&keylines_path), notify::RecursiveMode::NonRecursive) {
+								println!("Failed to re-watch keylines.xml: {:?}", e);
+							} else {
+								println!("Listening for changes on keylines.xml");
+							}
+						}
+						// Reset skip_event so next modify is handled correctly
+						skip_event = true;
+					}
+					_ => {}
 				}
-				Err(e) => println!("watch error: {:?}", e),
 			}
+			Err(e) => println!("watch error: {:?}", e),
 		}
 	}
 
