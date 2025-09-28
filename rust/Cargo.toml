@@ -2,6 +2,7 @@
 name = "keyline_calc"
 version = "0.1.0"
 edition = "2024"
+license = "Apache-2.0"
 
 [dependencies]
 cavalier_contours = "0.6.0"
