@@ -9,7 +9,7 @@ The idea of this mod is that you'll only ever use it to set up a savegame and ra
 
 ## Video guide
 
-[![Watch the video](img/YoutubeThumbnail.png)](https://youtu.be/CHXeHUf-eCE)
+[![Watch the video](img/YoutubeThumbnail2.png)](https://youtu.be/CHXeHUf-eCE)
 
 ## How to use
 
