@@ -25,8 +25,7 @@ The idea of this mod is that you'll only ever use it to set up a savegame and ra
 10. Check the keyline_calc window and wait until it says "Wrote x parallel lines to parallel_lines.xml". If that failed, try another location ingame.
 11. Press B to display parallel lines to the keyline which was exported
 12. When happy, left click to place the parallel lines. Otherwise, pick a different location and repeat from step 9
-13. When placing grapes, you will experience heavy framedrops. Don't do anything until they are gone.
-
+13. When placing grapes, you may experience heavy framedrops. Don't do anything until they are gone.
 
 ## Background information
 
@@ -38,3 +37,9 @@ Agroforestry:
 Keyline Design:
 
 - [Keyline in the AR Sandbox (Playlist)](https://www.youtube.com/watch?v=yKGvj50r_6w&list=PLNdMkGYdEqOAacDMD_7fZhGwc_NUdOw3n)
+
+## Recommended mods
+
+- [Natural Water Rivers and Ponds Pack](https://www.farming-simulator.com/mod.php?lang=en&country=gb&mod_id=305489) for Permaculture Swales
+- [Fenceless Husbandries](https://www.farming-simulator.com/mod.php?lang=en&country=ca&mod_id=232645) for having animals graze your agroforests
+- [Tramline Shop Filter](https://www.farming-simulator.com/mod.php?mod_id=317571&title=fs2025) for helping you find equipment which fits your strip width
