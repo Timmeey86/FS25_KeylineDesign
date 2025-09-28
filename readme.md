@@ -7,6 +7,10 @@ It uses an additional executable for doing heavy calculations efficiently in bac
 
 The idea of this mod is that you'll only ever use it to set up a savegame and rarely use it after. Therefore, it is not optimized for convenience or performance at the moment - as long as there is _some_ way to achieve what you want, it's considered good enough.
 
+## Video guide
+
+[![Watch the video](img/YoutubeThumbnail.png)](https://youtu.be/CHXeHUf-eCE)
+
 ## How to use
 
 1. Download the newest FS25_KeylineDesign.zip and keyline_calc.exe from the releases page
@@ -23,10 +27,14 @@ The idea of this mod is that you'll only ever use it to set up a savegame and ra
 12. When happy, left click to place the parallel lines. Otherwise, pick a different location and repeat from step 9
 13. When placing grapes, you will experience heavy framedrops. Don't do anything until they are gone.
 
-## Video guide
-
-coming soon ...
 
 ## Background information
 
-coming soon ...
+Agroforestry:
+
+- [Basics of Agroforestry](https://www.youtube.com/watch?v=jLZ0KtNx354)
+- [What is agroforestry?](https://www.youtube.com/watch?v=MZ6No1mL1QM)
+
+Keyline Design:
+
+- [Keyline in the AR Sandbox (Playlist)](https://www.youtube.com/watch?v=yKGvj50r_6w&list=PLNdMkGYdEqOAacDMD_7fZhGwc_NUdOw3n)
