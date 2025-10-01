@@ -19,6 +19,7 @@
         <sourceFile filename="scripts/ExportImportInterface.lua" />
         <sourceFile filename="scripts/gui/ParallelLineSettingsDialogTree.lua" />
         <sourceFile filename="scripts/gui/ParallelLineSettingsDialogVines.lua" />
+        <sourceFile filename="scripts/TreePreviewManager.lua" />
         <sourceFile filename="scripts/KeylineDesign.lua" />
     </extraSourceFiles>
 </modDesc>

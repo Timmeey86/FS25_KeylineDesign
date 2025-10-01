@@ -138,69 +138,38 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 		return
 	else
 		if #self.importedParallelLines > 0 then
+			-- Start removing previews. 
+			-- Note: If it turns out the temporary overlapping between actual and preview trees causes issues, we'll have to enqueue tree placement in the tree preview manager instead of spawning them in here
+			TreePreviewManager.removeCurrentPreviewTrees()
+
 			for _, coordList in ipairs(self.importedParallelLines) do
 				local removedCoords = 0
 				local processedCoords = 0
 				for i = 1, #coordList do
 					local coord = coordList[i]
-					if math.abs(coord.x) >= g_currentMission.terrainSize/2 or math.abs(coord.z) >= g_currentMission.terrainSize/2 then
-						removedCoords = removedCoords + 1
-						continue -- Skip any points which are out of bounds
-					else
-						processedCoords = processedCoords + 1
-						local err = self:verifyAccess(coord.x, coord.y, coord.z)
-						if err == nil or self.freeMode and err == ConstructionBrush.ERROR.PLACEMENT_BLOCKED then
+					processedCoords = processedCoords + 1
+					local err = self:verifyAccess(coord.x, coord.y, coord.z)
+					if err == nil or self.freeMode and err == ConstructionBrush.ERROR.PLACEMENT_BLOCKED then
 
-							-- paint the ground
-							local requestLandscaping = LandscapingSculptEvent.new(false, Landscaping.OPERATION.PAINT, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, self.settings.keylineWidth / 2.0, 1, Landscaping.BRUSH_SHAPE.CIRCLE, 1, self.terrainLayer)
-							g_client:getServerConnection():sendEvent(requestLandscaping)
+						-- paint the ground
+						local requestLandscaping = LandscapingSculptEvent.new(false, Landscaping.OPERATION.PAINT, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, self.settings.keylineWidth / 2.0, 1, Landscaping.BRUSH_SHAPE.CIRCLE, 1, self.terrainLayer)
+						g_client:getServerConnection():sendEvent(requestLandscaping)
 
-							-- plant grass if desired
-							if self.settings:isGrassEnabled() then
-								local event = LandscapingSculptEvent.new(false, Landscaping.OPERATION.FOLIAGE, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, self.settings.keylineWidth / 2.0, 1, Landscaping.BRUSH_SHAPE.CIRCLE, 0, nil, g_currentMission.foliageSystem:getFoliagePaintByName("meadow").id, self.settings:getGrassType())
-								table.insert(self.pendingFoliageEvents, event)
-							end
-
-							-- plant evenly spaced trees
-							local treeTypeIndex = nil
-							if (i-1) % 32 == 0 and self.settings:isTreeType32Enabled() then
-								treeTypeIndex = self.settings:getTreeType32()
-							elseif (i-1) % 16 == 0 and self.settings:isTreeType16Enabled() then
-								treeTypeIndex = self.settings:getTreeType16()
-							elseif (i-1) % 8 == 0 and self.settings:isTreeType8Enabled() then
-								treeTypeIndex = self.settings:getTreeType8()
-							elseif (i-1) % 4 == 0 and self.settings:isTreeType4Enabled() then
-								treeTypeIndex = self.settings:getTreeType4()
-							elseif (i-1) % 2 == 0 and self.settings:isTreeType2Enabled() then
-								treeTypeIndex = self.settings:getTreeType2()
-							end
-
-							if treeTypeIndex ~= nil then
-								local treeType = g_treePlantManager:getTreeTypeDescFromIndex(treeTypeIndex)
-								if not treeType then
-									Logging.error("Could not find tree type with index %s", treeTypeIndex)
-									return
-								end
-								local maxTreeStage = #treeType.stages
-								-- Get a random stage so the player can harvest some trees during the first winter and replace them
-								-- and will always have trees to replace
-								local treeStageIndex = math.random(1, maxTreeStage)
-								local treeStage = treeType.stages[treeStageIndex]
-								-- Get a random variation in case the tree has more than one variation
-								-- Note that there is a case where the tree is sapling-only, and the treeType.stages table does not
-								-- contain stages, but rather planter configuration data
-								local maxVariation = #treeStage > 2 and #treeStage or 1
-								local variationIndex = math.random(1, maxVariation)
-								local rotation = math.random() * 2 * math.pi
-								local isGrowing = true
-								g_treePlantManager:plantTree(treeTypeIndex, coord.x, coord.y, coord.z, 0, rotation, 0, treeStageIndex, variationIndex, isGrowing)
-							end
-						else
-							self.cursor:setErrorMessage(g_i18n:getText(ConstructionBrush.ERROR_MESSAGES[err]))
+						-- plant grass if desired
+						if self.settings:isGrassEnabled() then
+							local event = LandscapingSculptEvent.new(false, Landscaping.OPERATION.FOLIAGE, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, self.settings.keylineWidth / 2.0, 1, Landscaping.BRUSH_SHAPE.CIRCLE, 0, nil, g_currentMission.foliageSystem:getFoliagePaintByName("meadow").id, self.settings:getGrassType())
+							table.insert(self.pendingFoliageEvents, event)
 						end
+					else
+						self.cursor:setErrorMessage(g_i18n:getText(ConstructionBrush.ERROR_MESSAGES[err]))
 					end
 				end
-				printf("Removed/processed: %d/%d", removedCoords, processedCoords)
+				-- Plant all trees
+				local treeLoadingData = self:calculateTreeLoadingData(coordList)
+				local isGrowing = true
+				for _, data in ipairs(treeLoadingData) do
+					g_treePlantManager:plantTree(data.treeType.index, data.x, data.y, data.z, 0, data.rotation, 0, data.treeStageIndex, data.variationIndex, isGrowing)
+				end
 			end
 			self.keylines = {}
 			self.exportedKeylines = {}
@@ -229,6 +198,63 @@ end
 
 function ConstructionBrushParallelLines:onButtonTertiary()
 	self.importedParallelLines = ExportImportInterface.importParallelLines()
+
+	-- Generate new tree previews
+	TreePreviewManager.removeCurrentPreviewTrees()
+
+	if #self.importedParallelLines == 0 then
+		return
+	end
+
+	local keylineCoords = self.importedParallelLines[#self.importedParallelLines]
+	local keylineTreeLoadingData = self:calculateTreeLoadingData(keylineCoords)
+	for _, data in ipairs(keylineTreeLoadingData) do
+		-- Instead of planting the tree already, show a preview instead
+		TreePreviewManager.enqueueTreePreviewData(data.treeType, data.treeStageIndex, data.variationIndex, data.x, data.y, data.z, data.rotation)
+	end
+end
+
+function ConstructionBrushParallelLines:calculateTreeLoadingData(coordList)
+	local treeLoadingData = {}
+	for i = 1, #coordList do
+		local coord = coordList[i]
+		-- create previews for evenly spaced trees
+		local treeTypeIndex = nil
+		if (i-1) % 32 == 0 and self.settings:isTreeType32Enabled() then
+			treeTypeIndex = self.settings:getTreeType32()
+		elseif (i-1) % 16 == 0 and self.settings:isTreeType16Enabled() then
+			treeTypeIndex = self.settings:getTreeType16()
+		elseif (i-1) % 8 == 0 and self.settings:isTreeType8Enabled() then
+			treeTypeIndex = self.settings:getTreeType8()
+		elseif (i-1) % 4 == 0 and self.settings:isTreeType4Enabled() then
+			treeTypeIndex = self.settings:getTreeType4()
+		elseif (i-1) % 2 == 0 and self.settings:isTreeType2Enabled() then
+			treeTypeIndex = self.settings:getTreeType2()
+		end
+
+		if treeTypeIndex ~= nil then
+			local treeType = g_treePlantManager:getTreeTypeDescFromIndex(treeTypeIndex)
+			if not treeType then
+				Logging.error("Could not find tree type with index %s", treeTypeIndex)
+				continue
+			end
+			local maxTreeStage = #treeType.stages
+			-- Get a random stage so the player can harvest some trees during the first winter and replace them
+			-- and will always have trees to replace
+			local treeStageIndex = math.random(1, maxTreeStage)
+			local treeStage = treeType.stages[treeStageIndex]
+			-- Get a random variation in case the tree has more than one variation
+			-- Note that there is a case where the tree is sapling-only, and the treeType.stages table does not
+			-- contain stages, but rather planter configuration data, which is why we check for at least two stages
+			local maxVariation = #treeStage > 2 and #treeStage or 1
+			local variationIndex = math.random(1, maxVariation)
+			-- random rotation to make it look more natural
+			local rotation = math.random() * 2 * math.pi
+
+			table.insert(treeLoadingData, {treeType = treeType, treeStageIndex = treeStageIndex, variationIndex = variationIndex, rotation = rotation, x = coord.x, y = coord.y, z = coord.z})
+		end
+	end
+	return treeLoadingData
 end
 
 function ConstructionBrushParallelLines:getButtonPrimaryText()

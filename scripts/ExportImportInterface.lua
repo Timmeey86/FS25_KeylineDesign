@@ -111,17 +111,17 @@ function ExportImportInterface.importParallelLines()
 		return {}
 	end
 
-	-- Add the keylines to the list of all coordinates first
 	local allCurves = {}
-
-	-- Now read parallel lines from the XML
 	xmlFile:iterate("parallelLines.parallelLine", function(_, parallelLineKey)
 		local curve = {}
 		xmlFile:iterate(parallelLineKey .. ".coords", function(_, coordKey)
 			local x = xmlFile:getFloat(coordKey .. "#x")
 			local z = xmlFile:getFloat(coordKey .. "#z")
 			if x ~= nil and z ~= nil then
-				table.insert(curve, {x = x, z = z})
+				-- Skip any points which are out of bounds
+				if math.abs(x) < g_currentMission.terrainSize/2 and math.abs(z) < g_currentMission.terrainSize/2 then
+					table.insert(curve, {x = x, z = z})
+				end
 			end
 		end)
 		printf("Imported %d points for parallel line %s from the XML file", #curve, parallelLineKey)
