@@ -147,7 +147,7 @@ function ParallelLineSettingsDialogTree:initializeValues()
 
 	table.insert(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS, "None")
 	for i, treeType in ipairs(g_treePlantManager.treeTypes) do
-		table.insert(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS, treeType.name)
+		table.insert(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS, treeType.title)
 	end
 
 	self.forwardLengthSetting:setTexts(ParallelLineSettingsDialogTree.LENGTH_STRINGS)
