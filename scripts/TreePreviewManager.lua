@@ -20,6 +20,7 @@ local TreePreviewHelper_mt = Class(TreePreviewHelper)
 function TreePreviewHelper.new(treeType, treeStage, variationIndex, x, y, z, ry)
 	local self = setmetatable({}, TreePreviewHelper_mt)
 	self.treeType = treeType.name
+	self.treeTypeDesc = treeType
 	self.treeStage = treeStage
 	self.variationIndex = variationIndex
 	self.treeGrowthFactor = nil
@@ -96,6 +97,33 @@ function TreePreviewManager.update(_, dt)
 		instance:loadTree()
 		table.insert(currentPreviewTrees, instance)
 	end
+end
+
+function TreePreviewManager.getCurrentPreviewData()
+	local previewData = {}
+	for _, instance in ipairs(currentPreviewTrees) do
+		table.insert(previewData, {
+			treeType = instance.treeTypeDesc,
+			treeStage = instance.treeStage,
+			variationIndex = instance.variationIndex,
+			x = instance.x,
+			y = instance.y,
+			z = instance.z,
+			ry = instance.ry,
+		})
+	end
+	for _, instance in ipairs(pendingLoadData) do
+		table.insert(previewData, {
+			treeType = instance.treeTypeDesc,
+			treeStage = instance.treeStage,
+			variationIndex = instance.variationIndex,
+			x = instance.x,
+			y = instance.y,
+			z = instance.z,
+			ry = instance.ry,
+		})
+	end
+	return previewData
 end
 
 -- causes TreePreviewManager.update to be called regularly

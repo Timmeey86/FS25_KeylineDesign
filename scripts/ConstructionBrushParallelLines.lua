@@ -49,6 +49,7 @@ function ConstructionBrushParallelLines:activate()
 end
 
 function ConstructionBrushParallelLines:deactivate()
+	TreePreviewManager.removeCurrentPreviewTrees()
 	self.cursor:setTerrainOnly(false)
 	g_messageCenter:unsubscribeAll(self)
 	ConstructionBrushParallelLines:superClass().deactivate(self)
@@ -140,6 +141,7 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 		if #self.importedParallelLines > 0 then
 			-- Start removing previews. 
 			-- Note: If it turns out the temporary overlapping between actual and preview trees causes issues, we'll have to enqueue tree placement in the tree preview manager instead of spawning them in here
+			local treePreviewData = TreePreviewManager.getCurrentPreviewData()
 			TreePreviewManager.removeCurrentPreviewTrees()
 
 			for _, coordList in ipairs(self.importedParallelLines) do
@@ -164,12 +166,11 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 						self.cursor:setErrorMessage(g_i18n:getText(ConstructionBrush.ERROR_MESSAGES[err]))
 					end
 				end
-				-- Plant all trees
-				local treeLoadingData = self:calculateTreeLoadingData(coordList)
-				local isGrowing = true
-				for _, data in ipairs(treeLoadingData) do
-					g_treePlantManager:plantTree(data.treeType.index, data.x, data.y, data.z, 0, data.rotation, 0, data.treeStageIndex, data.variationIndex, isGrowing)
-				end
+			end
+			-- Plant all trees
+			local isGrowing = true
+			for _, data in ipairs(treePreviewData) do
+				g_treePlantManager:plantTree(data.treeType.index, data.x, data.y, data.z, 0, data.ry, 0, data.treeStage, data.variationIndex, isGrowing)
 			end
 			self.keylines = {}
 			self.exportedKeylines = {}
@@ -202,15 +203,13 @@ function ConstructionBrushParallelLines:onButtonTertiary()
 	-- Generate new tree previews
 	TreePreviewManager.removeCurrentPreviewTrees()
 
-	if #self.importedParallelLines == 0 then
-		return
-	end
 
-	local keylineCoords = self.importedParallelLines[#self.importedParallelLines]
-	local keylineTreeLoadingData = self:calculateTreeLoadingData(keylineCoords)
-	for _, data in ipairs(keylineTreeLoadingData) do
-		-- Instead of planting the tree already, show a preview instead
-		TreePreviewManager.enqueueTreePreviewData(data.treeType, data.treeStageIndex, data.variationIndex, data.x, data.y, data.z, data.rotation)
+	for _, coords in ipairs(self.importedParallelLines) do
+		local keylineTreeLoadingData = self:calculateTreeLoadingData(coords)
+		for _, data in ipairs(keylineTreeLoadingData) do
+			-- Instead of planting the tree already, show a preview instead
+			TreePreviewManager.enqueueTreePreviewData(data.treeType, data.treeStageIndex, data.variationIndex, data.x, data.y, data.z, data.rotation)
+		end
 	end
 end
 
