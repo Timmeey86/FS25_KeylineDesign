@@ -13,6 +13,9 @@
 ---@field treeType8Setting table @The UI element for the tree type 8 setting
 ---@field treeType4Setting table @The UI element for the tree type 4 setting
 ---@field treeType2Setting table @The UI element for the tree type 2 setting
+---@field treeMinGrowthStageSetting table @The UI element for the minimum tree growth stage setting
+---@field treeMaxGrowthStageSetting table @The UI element for the maximum tree growth stage setting
+---@field treeGrowthBehaviorSetting table @The UI element for the tree growth behavior setting
 ---@field settings ConstructionBrushParallelLinesSettings @The settings object which will be updated when the user presses "yes"
 
 ParallelLineSettingsDialogTree = {
@@ -21,6 +24,14 @@ ParallelLineSettingsDialogTree = {
 	RESOLUTION_STRINGS = {},
 	GRASS_TYPE_STRINGS = {},
 	TREE_TYPE_STRINGS = {},
+	TREE_GROWTH_BEHAVIOR = {
+		GROWING = 1,
+		STABLE = 2
+	},
+	TREE_GROWTH_BEHAVIOR_STRINGS = {
+		"Growing",
+		"Stable"
+	},
 	LENGTH_STEP = 50
 }
 
@@ -72,7 +83,7 @@ end
 function ParallelLineSettingsDialogTree:reload()
 	g_gui.currentlyReloading = true
 
-	local settingsObject = self.settingsObject
+	local settingsObject = self.settings
 	self:delete()
 	self = ParallelLineSettingsDialogTree.createInstance(settingsObject)
 	self:register()
@@ -104,7 +115,11 @@ function ParallelLineSettingsDialogTree:onYesNo(yesWasPressed)
 			treeType16 = self.treeType16Setting.state or 1,
 			treeType8 = self.treeType8Setting.state or 1,
 			treeType4 = self.treeType4Setting.state or 1,
-			treeType2 = self.treeType2Setting.state or 1
+			treeType2 = self.treeType2Setting.state or 1,
+			treeMinGrowthStage = self.treeMinGrowthStageSetting.state or 1,
+			-- Make sure maxGrowthStage is >= minGrowthStage
+			treeMaxGrowthStage = (self.treeMinGrowthStageSetting.state and self.treeMaxGrowthStageSetting.state and self.treeMaxGrowthStageSetting.state >= self.treeMinGrowthStageSetting.state) and self.treeMaxGrowthStageSetting.state or self.treeMinGrowthStageSetting.state or 7,
+			treeGrowthBehavior = self.treeGrowthBehaviorSetting.state or ParallelLineSettingsDialogTree.TREE_GROWTH_BEHAVIOR.GROWING
 		}
 		if settings.forwardLength == 0 and settings.reverseLength == 0 then
 			Logging.error("You need to set at least forward length or reverse length > 0")
@@ -136,6 +151,11 @@ function ParallelLineSettingsDialogTree:initializeValues()
 	for i = 0, 50 do
 		table.insert(amountValues, ("%d"):format(i))
 	end
+	local growthStageValues = {}
+	for i = 1, 7 do
+		table.insert(growthStageValues, ("%d"):format(i))
+	end
+
 	table.insert(ParallelLineSettingsDialogTree.GRASS_TYPE_STRINGS, "None")
 	local grassLayer = g_currentMission.foliageSystem:getFoliagePaintByName("meadow")
 	if grassLayer then
@@ -158,6 +178,9 @@ function ParallelLineSettingsDialogTree:initializeValues()
 	self.numberOfParallelLinesRightSetting:setTexts(amountValues)
 	self.numberOfParallelLinesLeftSetting:setTexts(amountValues)
 	self.grassTypeSetting:setTexts(ParallelLineSettingsDialogTree.GRASS_TYPE_STRINGS)
+	self.treeMinGrowthStageSetting:setTexts(growthStageValues)
+	self.treeMaxGrowthStageSetting:setTexts(growthStageValues)
+	self.treeGrowthBehaviorSetting:setTexts(ParallelLineSettingsDialogTree.TREE_GROWTH_BEHAVIOR_STRINGS)
 	self.treeType32Setting:setTexts(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS)
 	self.treeType16Setting:setTexts(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS)
 	self.treeType8Setting:setTexts(ParallelLineSettingsDialogTree.TREE_TYPE_STRINGS)
@@ -180,6 +203,9 @@ function ParallelLineSettingsDialogTree:applySettings(settings)
 	self.keylineWidthSetting:setState(settings.keylineWidth - 3 + 1)
 	self.numberOfParallelLinesRightSetting:setState(settings.numberOfParallelLinesRight + 1)
 	self.numberOfParallelLinesLeftSetting:setState(settings.numberOfParallelLinesLeft + 1)
+	self.treeMinGrowthStageSetting:setState(settings.treeMinGrowthStage or 1)
+	self.treeMaxGrowthStageSetting:setState(settings.treeMaxGrowthStage or 7)
+	self.treeGrowthBehaviorSetting:setState(settings.treeGrowthBehavior or ParallelLineSettingsDialogTree.TREE_GROWTH_BEHAVIOR.GROWING)
 	self.grassTypeSetting:setState(settings.grassType)
 	self.treeType32Setting:setState(settings.treeType32)
 	self.treeType16Setting:setState(settings.treeType16)

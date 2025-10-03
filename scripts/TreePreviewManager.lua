@@ -12,12 +12,13 @@
 ---@field y number @The y position where the tree should be rendered
 ---@field z number @The z position where the tree should be rendered
 ---@field ry number @The y rotation of the tree
+---@field isGrowing boolean @Whether the tree is growing (true) or stable (false)
 
 TreePreviewHelper = {}
 local TreePreviewHelper_mt = Class(TreePreviewHelper)
 
 ---Creates a new instance
-function TreePreviewHelper.new(treeType, treeStage, variationIndex, x, y, z, ry)
+function TreePreviewHelper.new(treeType, treeStage, variationIndex, x, y, z, ry, isGrowing)
 	local self = setmetatable({}, TreePreviewHelper_mt)
 	self.treeType = treeType.name
 	self.treeTypeDesc = treeType
@@ -31,6 +32,7 @@ function TreePreviewHelper.new(treeType, treeStage, variationIndex, x, y, z, ry)
 	self.y = y
 	self.z = z
 	self.ry = ry
+	self.isGrowing = isGrowing
 	self.isActive = true -- required so the previews are actually being loaded
 	return self
 end
@@ -66,8 +68,8 @@ local pendingUnloadData = {}
 local currentPreviewTrees = {}
 
 TreePreviewManager = {}
-function TreePreviewManager.enqueueTreePreviewData(treeType, treeStage, variationIndex, x, y, z, ry)
-	local instance = TreePreviewHelper.new(treeType, treeStage, variationIndex, x, y, z, ry)
+function TreePreviewManager.enqueueTreePreviewData(treeType, treeStage, variationIndex, x, y, z, ry, isGrowing)
+	local instance = TreePreviewHelper.new(treeType, treeStage, variationIndex, x, y, z, ry, isGrowing)
 	table.insert(pendingLoadData, instance)
 end
 
@@ -110,6 +112,7 @@ function TreePreviewManager.getCurrentPreviewData()
 			y = instance.y,
 			z = instance.z,
 			ry = instance.ry,
+			isGrowing = instance.isGrowing,
 		})
 	end
 	for _, instance in ipairs(pendingLoadData) do
@@ -121,6 +124,7 @@ function TreePreviewManager.getCurrentPreviewData()
 			y = instance.y,
 			z = instance.z,
 			ry = instance.ry,
+			isGrowing = instance.isGrowing,
 		})
 	end
 	return previewData

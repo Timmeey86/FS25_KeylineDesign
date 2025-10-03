@@ -8,6 +8,9 @@
 ---@field numberOfParallelLinesRight table @The number of parallel lines to the right of the keyline
 ---@field numberOfParallelLinesLeft table @The number of parallel lines to the left of the keyline
 ---@field grassType table @The grass type 
+---@field treeMinGrowthStage table @The minimum growth stage for trees to be placed
+---@field treeMaxGrowthStage table @The maximum growth stage for trees to be placed
+---@field treeGrowthBehavior table @The growth behavior for trees to be placed
 ---@field treeType32 table @The tree type to place every 32 meters
 ---@field treeType16 table @The tree type to place every 16 meters, unless there is a tree in the spot already
 ---@field treeType8 table @The tree type to place every 8 meters, unless there is a tree in the spot already
@@ -25,6 +28,9 @@ function ConstructionBrushParallelLinesSettings.new()
 	self.keylineWidth = 6
 	self.numberOfParallelLinesRight = 10
 	self.numberOfParallelLinesLeft = 10
+	self.treeMinGrowthStage = 1
+	self.treeMaxGrowthStage = 7
+	self.treeGrowthBehavior = ParallelLineSettingsDialogTree.TREE_GROWTH_BEHAVIOR.GROWING
 	self.grassType = 3
 	self.treeType32 = 1
 	self.treeType16 = 1
@@ -43,6 +49,9 @@ function ConstructionBrushParallelLinesSettings:applySettings(settings)
 	self.keylineWidth = settings.keylineWidth
 	self.numberOfParallelLinesLeft = settings.numberOfParallelLinesLeft
 	self.numberOfParallelLinesRight = settings.numberOfParallelLinesRight
+	self.treeMinGrowthStage = settings.treeMinGrowthStage
+	self.treeMaxGrowthStage = settings.treeMaxGrowthStage
+	self.treeGrowthBehavior = settings.treeGrowthBehavior
 	self.grassType = settings.grassType
 	self.treeType32 = settings.treeType32
 	self.treeType16 = settings.treeType16

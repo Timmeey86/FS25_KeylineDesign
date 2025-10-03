@@ -9,7 +9,7 @@
 		<GuiElement profile="fs25_dialogContentContainer">
 			<Text profile="fs25_dialogTitle" text="Parallel Line Settings" id="dialogTitleElement" position="0px -20px"/>
 			<ThreePartBitmap profile="fs25_lineSeparatorTop" absoluteSizeOffset="100px 0px" position="0px -80px"/>
-			<ScrollingLayout profile="fs25_settingsLayout" id="settingsLayout" topClipperElementName="topClipper" bottomClipperElementName="bottomClipper" position="20px -100px" width="1160px" height="720px">
+			<ScrollingLayout profile="fs25_settingsLayout" id="settingsLayout" topClipperElementName="topClipper" bottomClipperElementName="bottomClipper" position="20px -100px" width="1160px" height="620px">
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="forwardLengthSetting">
 						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="forwardLengthSettingToolTip" text="The maximum length of the keyline in meters in positive X/Y direction"/>
@@ -57,6 +57,24 @@
 						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="grassTypeSettingTooltip" text="The type of grass to be planted (not all types can be planted - you'll have to experiment)"/>
 					</MultiTextOption>
 					<Text profile="kd_multiTextTitle" id="grassTypeSettingTitle" text="Grass Type"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="treeMinGrowthStageSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeMinGrowthStageSettingTooltip" text="The minimum growth stage to be used for trees"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="treeMinGrowthStageSettingTitle" text="Tree Min. Growth Stage"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="treeMaxGrowthStageSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeMaxGrowthStageSettingTooltip" text="The maximum growth stage to be used for trees"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="treeMaxGrowthStageSettingTitle" text="Tree Max. Growth Stage"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="treeGrowthBehaviorSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="treeGrowthBehaviorSettingTooltip" text="The growth behavior to be used for trees"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="treeGrowthBehaviorSettingTitle" text="Tree Growth Behavior"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeType32Setting">

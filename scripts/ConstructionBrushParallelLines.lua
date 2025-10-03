@@ -145,7 +145,6 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 			TreePreviewManager.removeCurrentPreviewTrees()
 
 			for _, coordList in ipairs(self.importedParallelLines) do
-				local removedCoords = 0
 				local processedCoords = 0
 				for i = 1, #coordList do
 					local coord = coordList[i]
@@ -168,9 +167,8 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 				end
 			end
 			-- Plant all trees
-			local isGrowing = true
 			for _, data in ipairs(treePreviewData) do
-				g_treePlantManager:plantTree(data.treeType.index, data.x, data.y, data.z, 0, data.ry, 0, data.treeStage, data.variationIndex, isGrowing)
+				g_treePlantManager:plantTree(data.treeType.index, data.x, data.y, data.z, 0, data.ry, 0, data.treeStage, data.variationIndex, data.isGrowing)
 			end
 			self.keylines = {}
 			self.exportedKeylines = {}
@@ -208,7 +206,7 @@ function ConstructionBrushParallelLines:onButtonTertiary()
 		local keylineTreeLoadingData = self:calculateTreeLoadingData(coords)
 		for _, data in ipairs(keylineTreeLoadingData) do
 			-- Instead of planting the tree already, show a preview instead
-			TreePreviewManager.enqueueTreePreviewData(data.treeType, data.treeStageIndex, data.variationIndex, data.x, data.y, data.z, data.rotation)
+			TreePreviewManager.enqueueTreePreviewData(data.treeType, data.treeStageIndex, data.variationIndex, data.x, data.y, data.z, data.rotation, data.isGrowing)
 		end
 	end
 end
@@ -237,20 +235,23 @@ function ConstructionBrushParallelLines:calculateTreeLoadingData(coordList)
 				Logging.error("Could not find tree type with index %s", treeTypeIndex)
 				continue
 			end
-			local maxTreeStage = #treeType.stages
-			-- Get a random stage so the player can harvest some trees during the first winter and replace them
-			-- and will always have trees to replace
-			local treeStageIndex = math.random(1, maxTreeStage)
+			local maxTreeStage = math.min(#treeType.stages, self.settings.treeMaxGrowthStage)
+			local minTreeStage = math.min(#treeType.stages, self.settings.treeMinGrowthStage)
+			local treeStageIndex = math.random(minTreeStage, maxTreeStage)
 			local treeStage = treeType.stages[treeStageIndex]
+
 			-- Get a random variation in case the tree has more than one variation
 			-- Note that there is a case where the tree is sapling-only, and the treeType.stages table does not
 			-- contain stages, but rather planter configuration data, which is why we check for at least two stages
 			local maxVariation = #treeStage > 2 and #treeStage or 1
 			local variationIndex = math.random(1, maxVariation)
+
 			-- random rotation to make it look more natural
 			local rotation = math.random() * 2 * math.pi
 
-			table.insert(treeLoadingData, {treeType = treeType, treeStageIndex = treeStageIndex, variationIndex = variationIndex, rotation = rotation, x = coord.x, y = coord.y, z = coord.z})
+			local isGrowing = self.settings.treeGrowthBehavior == ParallelLineSettingsDialogTree.TREE_GROWTH_BEHAVIOR.GROWING
+
+			table.insert(treeLoadingData, {treeType = treeType, treeStageIndex = treeStageIndex, variationIndex = variationIndex, rotation = rotation, x = coord.x, y = coord.y, z = coord.z, isGrowing = isGrowing})
 		end
 	end
 	return treeLoadingData
