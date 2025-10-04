@@ -9,7 +9,7 @@
 		<GuiElement profile="fs25_dialogContentContainer">
 			<Text profile="fs25_dialogTitle" text="Parallel Line Settings" id="dialogTitleElement" position="0px -20px"/>
 			<ThreePartBitmap profile="fs25_lineSeparatorTop" absoluteSizeOffset="100px 0px" position="0px -80px"/>
-			<ScrollingLayout profile="fs25_settingsLayout" id="settingsLayout" topClipperElementName="topClipper" bottomClipperElementName="bottomClipper" position="20px -100px" width="1160px" height="620px">
+			<ScrollingLayout profile="fs25_settingsLayout" id="settingsLayout" topClipperElementName="topClipper" bottomClipperElementName="bottomClipper" position="20px -100px" width="1000px" height="620px">
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="forwardLengthSetting">
 						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="forwardLengthSettingToolTip" text="The maximum length of the keyline in meters in positive X/Y direction"/>
@@ -54,9 +54,21 @@
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="grassTypeSetting">
-						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="grassTypeSettingTooltip" text="The type of grass to be planted (not all types can be planted - you'll have to experiment)"/>
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="grassTypeSettingTooltip" text="The type of grass to be planted"/>
 					</MultiTextOption>
 					<Text profile="kd_multiTextTitle" id="grassTypeSettingTitle" text="Grass Type"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="bushTypeSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="bushTypeSettingTooltip" text="The type of bush to be planted"/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="bushTypeSettingTitle" text="Bush Type"/>
+				</GuiElement>
+				<GuiElement profile="kd_multiTextOptionWrapper">
+					<MultiTextOption profile="kd_multiTextOption" id="bushWidthSetting">
+						<Text profile="kd_multiTextOptionTooltip" name="ignore" id="bushWidthSettingTooltip" text="The width of the space for bushes. Note that too small may result in almost no bushes."/>
+					</MultiTextOption>
+					<Text profile="kd_multiTextTitle" id="bushWidthSettingTitle" text="Bush Space Width"/>
 				</GuiElement>
 				<GuiElement profile="kd_multiTextOptionWrapper">
 					<MultiTextOption profile="kd_multiTextOption" id="treeMinGrowthStageSetting">

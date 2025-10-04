@@ -7,7 +7,11 @@
 ---@field keylineWidth table @The keyline width
 ---@field numberOfParallelLinesRight table @The number of parallel lines to the right of the keyline
 ---@field numberOfParallelLinesLeft table @The number of parallel lines to the left of the keyline
----@field grassType table @The grass type 
+---@field grassType table @The grass type
+---@field grassBrushParameters table @The brush parameters for the selected grass type
+---@field bushType table @The bush type
+---@field bushWidth table @The bush width
+---@field bushBrushParameters table @The brush parameters for the selected bush type
 ---@field treeMinGrowthStage table @The minimum growth stage for trees to be placed
 ---@field treeMaxGrowthStage table @The maximum growth stage for trees to be placed
 ---@field treeGrowthBehavior table @The growth behavior for trees to be placed
@@ -31,7 +35,9 @@ function ConstructionBrushParallelLinesSettings.new()
 	self.treeMinGrowthStage = 1
 	self.treeMaxGrowthStage = 7
 	self.treeGrowthBehavior = ParallelLineSettingsDialogTree.TREE_GROWTH_BEHAVIOR.GROWING
-	self.grassType = 3
+	self.grassType = 1
+	self.bushType = 1
+	self.bushWidth = 1
 	self.treeType32 = 1
 	self.treeType16 = 1
 	self.treeType8 = 1
@@ -53,6 +59,10 @@ function ConstructionBrushParallelLinesSettings:applySettings(settings)
 	self.treeMaxGrowthStage = settings.treeMaxGrowthStage
 	self.treeGrowthBehavior = settings.treeGrowthBehavior
 	self.grassType = settings.grassType
+	self.grassBrushParameters = settings.grassBrushParameters
+	self.bushType = settings.bushType
+	self.bushBrushParameters = settings.bushBrushParameters
+	self.bushWidth = settings.bushWidth
 	self.treeType32 = settings.treeType32
 	self.treeType16 = settings.treeType16
 	self.treeType8 = settings.treeType8
@@ -75,6 +85,12 @@ function ConstructionBrushParallelLinesSettings:isGrassEnabled()
 end
 function ConstructionBrushParallelLinesSettings:getGrassType()
 	return self.grassType - 1
+end
+function ConstructionBrushParallelLinesSettings:isBushEnabled()
+	return self.bushType ~= 1
+end
+function ConstructionBrushParallelLinesSettings:getBushType()
+	return self.bushType - 1
 end
 
 function ConstructionBrushParallelLinesSettings:isTreeType32Enabled()

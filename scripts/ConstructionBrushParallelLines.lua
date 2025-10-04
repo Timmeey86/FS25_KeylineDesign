@@ -29,6 +29,7 @@ function ConstructionBrushParallelLines.new(subclass_mt, cursor)
 	self.exportedKeylines = {}
 	self.settings = ConstructionBrushParallelLinesSettings.getInstance()
 	self.pendingFoliageEvents = {}
+	self.pendingBushEvents = {}
 	self.isProcessingEvents = false
 	self.keylineMode = ConstructionBrushParallelLines.MODES.TERRAIN
 	return self
@@ -62,6 +63,7 @@ function ConstructionBrushParallelLines:copyState(from)
 	self.exportedKeylines = {}
 	self.settings = ConstructionBrushParallelLinesSettings.getInstance()
 	self.pendingFoliageEvents = {}
+	self.pendingBushEvents = {}
 	self.isProcessingEvents = false
 	self.keylineMode = from.keylineMode
 end
@@ -94,6 +96,21 @@ function ConstructionBrushParallelLines:update(dt)
 				g_client:getServerConnection():sendEvent(event)
 			end
 			self.pendingFoliageEvents = {}
+			self.isProcessingEvents = false
+			delay = 100
+		else
+			-- If we paint foliage too early, it seems to be executed before painting the ground, which will prevent the foliage from appearing in the first place
+			delay = delay - dt
+		end
+	-- delay bushes once more so grass doesn't interfere with them
+	elseif not self.isProcessingEvents and #self.pendingBushEvents > 0 then
+		if delay <= 0 then
+			self.isProcessingEvents = true
+			printf("Processing %d pending bush events", #self.pendingBushEvents)
+			for _, event in ipairs(self.pendingBushEvents) do
+				g_client:getServerConnection():sendEvent(event)
+			end
+			self.pendingBushEvents = {}
 			self.isProcessingEvents = false
 			delay = 100
 		else
@@ -158,8 +175,11 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 
 						-- plant grass if desired
 						if self.settings:isGrassEnabled() then
-							local event = LandscapingSculptEvent.new(false, Landscaping.OPERATION.FOLIAGE, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, self.settings.keylineWidth / 2.0, 1, Landscaping.BRUSH_SHAPE.CIRCLE, 0, nil, g_currentMission.foliageSystem:getFoliagePaintByName("meadow").id, self.settings:getGrassType())
-							table.insert(self.pendingFoliageEvents, event)
+							self:enqueueFoliagePaintEvent(self.pendingFoliageEvents, coord, self.settings.grassBrushParameters, self.settings.keylineWidth)
+						end
+						if self.settings:isBushEnabled() then
+							local width = self.settings.bushWidth
+							self:enqueueFoliagePaintEvent(self.pendingBushEvents, coord, self.settings.bushBrushParameters, width)
 						end
 					else
 						self.cursor:setErrorMessage(g_i18n:getText(ConstructionBrush.ERROR_MESSAGES[err]))
@@ -178,6 +198,18 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 		end
 	end
 	printf("Finished placing things, except for foliage")
+end
+
+function ConstructionBrushParallelLines:enqueueFoliagePaintEvent(eventTable, coord, params, width)
+	local radius = width * 0.5
+	if params then
+		local foliagePaint = g_currentMission.foliageSystem:getFoliagePaintByName(params.foliageName)
+		local foliageValue = params.value
+		if foliagePaint and foliageValue then
+			local event = LandscapingSculptEvent.new(false, Landscaping.OPERATION.FOLIAGE, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, radius, 1, Landscaping.BRUSH_SHAPE.CIRCLE, 0, nil, foliagePaint.id, tonumber(foliageValue))
+			table.insert(eventTable, event)
+		end
+	end
 end
 
 function ConstructionBrushParallelLines:onAxisPrimary()
