@@ -222,14 +222,16 @@ fn process_keylines_xml(keylines_path: &str, savegame_path: &str) {
 	println!("Headland width: {}, Strip width: {}, Keyline width: {}", headland_width, strip_width, keyline_width);
 
 	// Generate parallel lines to the keyline
-	let parallel_lines1 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_right, strip_width + keyline_width, 1);
-	let parallel_lines2 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_left, strip_width + keyline_width, -1);
+	let parallel_lines1 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_right, *strip_width + *keyline_width, 1);
+	let parallel_lines2 = generate_parallel_lines(&keylines.keylines[0].coords, *num_lines_left, *strip_width + *keyline_width, -1);
 	// combine both sets as well as the initial keyline into a single ParallelLines struct
 	let mut parallel_lines = parallel_lines1;
 	parallel_lines.parallel_lines.extend(parallel_lines2.parallel_lines);
 	parallel_lines.parallel_lines.push(ParallelLine { coords: keylines.keylines[0].coords.clone() });
 
-	let parallel_boundary = generate_parallel_lines(&keylines.field_boundary.coords, 1, *headland_width, 1);
+	// For the boundary, add at least half the keyline width so the border of the keyline is the specified distance from the boundary
+	let half_keyline_width = (*keyline_width as f64 + 0.5 / 2.0).floor() as u16;
+	let parallel_boundary = generate_parallel_lines(&keylines.field_boundary.coords, 1, *headland_width + half_keyline_width, 1);
 
 	// Cut away any points which are outside of the polygon defined by parallel_boundary.
 	// If points were cut off, but then new points are inside the polygon again, split the line into multiple lines

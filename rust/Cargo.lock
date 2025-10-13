@@ -67,7 +67,7 @@ dependencies = [
 
 [[package]]
 name = "keyline_calc"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cavalier_contours",
  "notify",
