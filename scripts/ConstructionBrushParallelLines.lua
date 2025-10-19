@@ -306,7 +306,7 @@ function ConstructionBrushParallelLines:getButtonTertiaryText()
 end
 
 function ConstructionBrushParallelLines:getAxisSecondaryText()
-	return "Change angle"
+	return ("Change angle: %d°"):format(self.angle)
 end
 
 function ConstructionBrushParallelLines:onOpenSettingsDialog()

@@ -152,10 +152,10 @@ function ConstructionBrushParallelFence:getButtonSecondaryText()
 end
 
 function ConstructionBrushParallelFence:getAxisPrimaryText()
-	return "Change angle (1°)"
+	return "Fine-tune angle"
 end
 function ConstructionBrushParallelFence:getAxisSecondaryText()
-	return "Change angle (10°)"
+	return ("Change angle: %d°"):format(self.angle)
 end
 
 function ConstructionBrushParallelFence:onAxisPrimary(delta)
