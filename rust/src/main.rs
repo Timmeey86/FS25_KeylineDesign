@@ -3,7 +3,6 @@ use yaserde_derive::{YaDeserialize, YaSerialize};
 use notify::{Event, Result, Watcher};
 use std::path::Path;
 use std::sync::mpsc;
-use std::io::{Write};
 use notify::event::{EventKind, ModifyKind, RemoveKind};
 
 // Define structures which match the keyline import and the parallel line export
@@ -194,7 +193,7 @@ fn resample_line_to_equal_spacing(coords: &Vec<Coords>, spacing: f64) -> Vec<Coo
 	new_coords
 }
 
-fn process_keylines_xml(keylines_path: &str, savegame_path: &str) {
+fn process_keylines_xml(keylines_path: &str, export_path: &str) {
 	// Deserialize the keylines.xml file
 	let keylines_file = std::fs::File::open(&keylines_path).expect("Failed to open keylines.xml");
 	let mut keylines: Keylines = yaserde::de::from_reader(keylines_file).expect("Failed to parse keylines.xml");
@@ -244,7 +243,7 @@ fn process_keylines_xml(keylines_path: &str, savegame_path: &str) {
 	}
 
 	// Serialize the parallel lines to parallel_lines.xml
-	let parallel_lines_path = format!("{}/parallel_lines.xml", savegame_path);
+	let parallel_lines_path = format!("{}parallel_lines.xml", export_path);
 	let mut parallel_lines_file = std::fs::File::create(&parallel_lines_path).expect("Failed to create parallel_lines.xml");
 	let yaserde_cfg = yaserde::ser::Config {
 		perform_indent: true,
@@ -255,24 +254,21 @@ fn process_keylines_xml(keylines_path: &str, savegame_path: &str) {
 }
 
 fn main() -> Result<()>{
-	// Ask for the savegame slot number through standard in
-	print!("Enter savegame slot number: ");
-	std::io::stdout().flush()?;
-	let mut savegame_id = String::new();
-	std::io::stdin().read_line(&mut savegame_id)?;
-	let savegame_id = savegame_id.trim();
-
 	// Get the path to the user directory
 	let user_dir = std::env::var("USERPROFILE").unwrap();
 	// Build the path to the FS25 save game directories
-	let savegame_path = format!(r"{}\Documents\My Games\FarmingSimulator2025\savegame{}", user_dir, savegame_id);
+	let export_path = format!(r"{}\Documents\My Games\FarmingSimulator2025\modSettings\FS25_KeylineDesign\", user_dir);
 
 	// Find the keylines.xml and watch for changes, even if it doesn't exist yet
-	let keylines_path = format!(r"{}\keylines.xml", savegame_path);
+	let keylines_path = format!(r"{}keylines.xml", export_path);
 	println!("Listening for changes on: {}", keylines_path);
 	let (tx, rx) = mpsc::channel::<Result<Event>>();
 	
 	// Create the keylines.xml file if it doesn't exist
+	// If necessary, create the export directory as well
+	if !Path::new(&export_path).exists() {
+		std::fs::create_dir_all(&export_path).expect("Failed to create export directory");
+	}
 	if !Path::new(&keylines_path).exists() {
 		std::fs::File::create(&keylines_path).expect("Failed to create keylines.xml");
 	}
@@ -295,7 +291,7 @@ fn main() -> Result<()>{
 						} else {
 							skip_event = true;
 							if let Err(e) = std::panic::catch_unwind(|| {
-								process_keylines_xml(&keylines_path, &savegame_path)
+								process_keylines_xml(&keylines_path, &export_path);
 							}) {
 								println!("Failed generating keylines. Try another location: {:?}", e);
 							}

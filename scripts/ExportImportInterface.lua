@@ -28,11 +28,14 @@ end)
 XmlExporter = {}
 local writerInstance = setmetatable({}, Class(XmlExporter))
 writerInstance.combinedKeyline = nil
+local modSettingsDirectory = g_modSettingsDirectory
+XmlExporter.exportDirectory = g_modSettingsDirectory .. "/FS25_KeylineDesign/"
+createFolder(XmlExporter.exportDirectory)
 
 function XmlExporter:writeToXml(courseField, success)
 	printf("Exporting keylines and field boundary to XML file")
 
-	local filePath = Utils.getFilename("/keylines.xml", g_currentMission.missionInfo.savegameDirectory)
+	local filePath = Utils.getFilename("keylines.xml", XmlExporter.exportDirectory)
 	local xmlFile = XMLFile.create("keylinesXML", filePath, "keylines", ExportImportInterface.exportSchema)
 	if not xmlFile then
 		Logging.error("Failed exporting keylines to XML")
@@ -104,7 +107,7 @@ end
 
 function ExportImportInterface.importParallelLines()
 	-- Read parallel line coordinates from an XML file
-	local filePath = Utils.getFilename("/parallel_lines.xml", g_currentMission.missionInfo.savegameDirectory)
+	local filePath = Utils.getFilename("parallel_lines.xml", XmlExporter.exportDirectory)
 	local xmlFile = XMLFile.load("parallelLinesXML", filePath, ExportImportInterface.importSchema)
 	if not xmlFile then
 		Logging.error("Failed importing parallel lines from XML")
