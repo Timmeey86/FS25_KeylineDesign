@@ -15,17 +15,23 @@ The idea of this mod is that you'll only ever use it to set up a savegame and ra
 
 1. Download the newest FS25_KeylineDesign.zip and keyline_calc.exe from the releases page
 2. Run the executable (double click, or start from command line, or if you don't trust the exe, build it yourself with `cargo` from the `rust` directory, then run that).
-3. In the command line window of the executable, enter the save slot number you are going to play. If you want a different save slot, you need to restart the keyline_calc.exe. It is recommended to place the executable window on a second screen if you have it.
+3. It is recommended to place the executable window on a second screen if you have it so you can see if there are issues and when it's done calculating.
 4. Start the game and load the save (can do that earlier, does not matter)
 5. Open the construction screen (Shift+P by default)
-6. Select the last category in either the 2nd menu (for grapes etc) or the 5th menu (for agroforestry/keyline design)
-7. Check the help menu and use the `F`, `K`, `L`, `N`, `M` options as required
+6. Select the last category in the 5th menu (for agroforestry/keyline design)
+7. Open the settings by pressing F to set up grass and bushes
 8. Move the mouse to the desired position of the central line. When not using straight lines, this line will follow the terrain. Any other line will always be parallel to the central line.
-9. Right click to export field data from the game
+9. Right click to export the desired line (and more infos) so the background executable can use it.
 10. Check the keyline_calc window and wait until it says "Wrote x parallel lines to parallel_lines.xml". If that failed, try another location ingame.
-11. Press B to display parallel lines to the keyline which was exported
+11. Press B to display parallel lines to the keyline which was exported.
 12. When happy, left click to place the parallel lines. Otherwise, pick a different location and repeat from step 9
-13. When placing grapes, you may experience heavy framedrops. Don't do anything until they are gone.
+13. If not satisfied with the looks, open the settings menu (F) again, and choose different grass/bush patterns. Click ok, then press B to import the same calculated lines again and left click to override. Note that this does not work with trees, just grass and bushes
+14. Once satisfied, open the settings menu (F) again, set grass/bush to None and set up tree settings.
+15. Click ok, then press B to view a preview of trees. You can press B multiple times to get a different partially randomized output
+16. If not satisfied with the preview, open the settings menu again and try different settings. Repeat from step 15.
+17. Once satisfied, left click to place the trees as shown in the preview.
+
+Note: You can also place grapes with fewer settings from the last tab of the second construction screen menu.
 
 ## Background information
 
