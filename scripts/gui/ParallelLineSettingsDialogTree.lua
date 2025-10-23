@@ -166,9 +166,9 @@ function ParallelLineSettingsDialogTree:initializeValues()
 	end
 
 	-- Get grass and bushes from the store manager - the same way the construction screen finds them
-	table.insert(ParallelLineSettingsDialogTree.GRASS_BRUSH_PARAMETERS, { foliageName = "invalid", value = 0 })
+	table.insert(ParallelLineSettingsDialogTree.GRASS_BRUSH_PARAMETERS, { foliageId = 0, value = 0 })
 	table.insert(ParallelLineSettingsDialogTree.GRASS_TYPE_STRINGS, "None")
-	table.insert(ParallelLineSettingsDialogTree.BUSH_BRUSH_PARAMETERS, { foliageName = "invalid", value = 0 })
+	table.insert(ParallelLineSettingsDialogTree.BUSH_BRUSH_PARAMETERS, { foliageId = 0, value = 0 })
 	table.insert(ParallelLineSettingsDialogTree.BUSH_TYPE_STRINGS, "None")
 	for _, item in ipairs(g_storeManager:getItems()) do
 		if item.brush ~= nil and item.brush.type == "foliage" then
@@ -179,11 +179,12 @@ function ParallelLineSettingsDialogTree:initializeValues()
 
 			local parameters = item.brush.parameters
 			if parameters and #parameters > 0 then
+				local foliageId = g_currentMission.foliageSystem:getFoliagePaintByName(parameters[1]).id
 				if parameters[1] == "decoFoliage" or parameters[1] == "meadow" then
-					table.insert(ParallelLineSettingsDialogTree.GRASS_BRUSH_PARAMETERS, { foliageName = parameters[1], value = parameters[2] })
+					table.insert(ParallelLineSettingsDialogTree.GRASS_BRUSH_PARAMETERS, { foliageId = foliageId, value = tonumber(parameters[2]) })
 					table.insert(ParallelLineSettingsDialogTree.GRASS_TYPE_STRINGS, filename)
 				elseif parameters[1]:startsWith("decoBush") then
-					table.insert(ParallelLineSettingsDialogTree.BUSH_BRUSH_PARAMETERS, { foliageName = parameters[1], value = parameters[2] })
+					table.insert(ParallelLineSettingsDialogTree.BUSH_BRUSH_PARAMETERS, { foliageId = foliageId, value = tonumber(parameters[2]) })
 					table.insert(ParallelLineSettingsDialogTree.BUSH_TYPE_STRINGS, filename)
 				end
 			end

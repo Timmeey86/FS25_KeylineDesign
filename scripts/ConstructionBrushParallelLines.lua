@@ -9,6 +9,7 @@ ConstructionBrushParallelLines.MODES = {
 	STRAIGHT = 2
 }
 
+
 function ConstructionBrushParallelLines.new(subclass_mt, cursor)
 	local self = ConstructionBrushParallelLines:superClass().new(subclass_mt or ConstructionBrushParallelLines_mt, cursor)
 	self.brushIdentifier = "keylines"
@@ -28,10 +29,8 @@ function ConstructionBrushParallelLines.new(subclass_mt, cursor)
 	self.keylines = {}
 	self.exportedKeylines = {}
 	self.settings = ConstructionBrushParallelLinesSettings.getInstance()
-	self.pendingFoliageEvents = {}
-	self.pendingBushEvents = {}
-	self.isProcessingEvents = false
 	self.keylineMode = ConstructionBrushParallelLines.MODES.TERRAIN
+	self.randomseed = getTimeSec()
 	return self
 end
 
@@ -46,7 +45,6 @@ function ConstructionBrushParallelLines:activate()
 	self.cursor:setShape(GuiTopDownCursor.SHAPES.CIRCLE)
 	self.cursor:setColorMode(GuiTopDownCursor.SHAPES_COLORS.PAINTING)
 	self.cursor:setTerrainOnly(true)
-	g_messageCenter:subscribe(LandscapingSculptEvent, self.onSculptingFinished, self)
 end
 
 function ConstructionBrushParallelLines:deactivate()
@@ -62,9 +60,6 @@ function ConstructionBrushParallelLines:copyState(from)
 	self.keylines = {}
 	self.exportedKeylines = {}
 	self.settings = ConstructionBrushParallelLinesSettings.getInstance()
-	self.pendingFoliageEvents = {}
-	self.pendingBushEvents = {}
-	self.isProcessingEvents = false
 	self.keylineMode = from.keylineMode
 end
 
@@ -78,7 +73,6 @@ function ConstructionBrushParallelLines:setParameters(groundTypeName)
 	self:setGroundType(groundTypeName)
 end
 
-local delay = 100
 function ConstructionBrushParallelLines:update(dt)
 	ConstructionBrushParallelLines:superClass().update(self, dt)
 
@@ -87,39 +81,8 @@ function ConstructionBrushParallelLines:update(dt)
 
 	KeylineCalculation.drawLines(self.keylines, self.exportedKeylines, self.importedParallelLines)
 
-	-- Draw all lines
-	if not self.isProcessingEvents and #self.pendingFoliageEvents > 0 then
-		if delay <= 0 then
-			self.isProcessingEvents = true
-			printf("Processing %d pending foliage events", #self.pendingFoliageEvents)
-			for _, event in ipairs(self.pendingFoliageEvents) do
-				g_client:getServerConnection():sendEvent(event)
-			end
-			self.pendingFoliageEvents = {}
-			self.isProcessingEvents = false
-			delay = 100
-		else
-			-- If we paint foliage too early, it seems to be executed before painting the ground, which will prevent the foliage from appearing in the first place
-			delay = delay - dt
-		end
-	-- delay bushes once more so grass doesn't interfere with them
-	elseif not self.isProcessingEvents and #self.pendingBushEvents > 0 then
-		if delay <= 0 then
-			self.isProcessingEvents = true
-			printf("Processing %d pending bush events", #self.pendingBushEvents)
-			for _, event in ipairs(self.pendingBushEvents) do
-				g_client:getServerConnection():sendEvent(event)
-			end
-			self.pendingBushEvents = {}
-			self.isProcessingEvents = false
-			delay = 100
-		else
-			-- If we paint foliage too early, it seems to be executed before painting the ground, which will prevent the foliage from appearing in the first place
-			delay = delay - dt
-		end
-	end
-
 end
+
 
 function ConstructionBrushParallelLines:updateKeyline()
 	local x, y, z = self.cursor:getHitTerrainPosition()
@@ -146,8 +109,6 @@ function ConstructionBrushParallelLines:updateKeyline()
 	end
 end
 
-function ConstructionBrushParallelLines:onSculptingFinished(isValidation, errorCode, displacedVolumeOrArea) end
-
 
 function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 	self:setActiveSound(ConstructionSound.ID.NONE)
@@ -155,60 +116,17 @@ function ConstructionBrushParallelLines:onButtonPrimary(isDown, isDrag, isUp)
 		self.lastX = nil
 		return
 	else
-		if #self.importedParallelLines > 0 then
-			-- Start removing previews. 
-			-- Note: If it turns out the temporary overlapping between actual and preview trees causes issues, we'll have to enqueue tree placement in the tree preview manager instead of spawning them in here
-			local treePreviewData = TreePreviewManager.getCurrentPreviewData()
-			TreePreviewManager.removeCurrentPreviewTrees()
-
-			for _, coordList in ipairs(self.importedParallelLines) do
-				local processedCoords = 0
-				for i = 1, #coordList do
-					local coord = coordList[i]
-					processedCoords = processedCoords + 1
-					local err = self:verifyAccess(coord.x, coord.y, coord.z)
-					if err == nil or self.freeMode and err == ConstructionBrush.ERROR.PLACEMENT_BLOCKED then
-
-						-- paint the ground
-						local requestLandscaping = LandscapingSculptEvent.new(false, Landscaping.OPERATION.PAINT, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, self.settings.keylineWidth / 2.0, 1, Landscaping.BRUSH_SHAPE.CIRCLE, 1, self.terrainLayer)
-						g_client:getServerConnection():sendEvent(requestLandscaping)
-
-						-- plant grass if desired
-						if self.settings:isGrassEnabled() then
-							self:enqueueFoliagePaintEvent(self.pendingFoliageEvents, coord, self.settings.grassBrushParameters, self.settings.keylineWidth)
-						end
-						if self.settings:isBushEnabled() then
-							local width = self.settings.bushWidth
-							self:enqueueFoliagePaintEvent(self.pendingBushEvents, coord, self.settings.bushBrushParameters, width)
-						end
-					else
-						self.cursor:setErrorMessage(g_i18n:getText(ConstructionBrush.ERROR_MESSAGES[err]))
-					end
-				end
-			end
-			-- Plant all trees
-			for _, data in ipairs(treePreviewData) do
-				g_treePlantManager:plantTree(data.treeType.index, data.x, data.y, data.z, 0, data.ry, 0, data.treeStage, data.variationIndex, data.isGrowing)
-			end
-			self.keylines = {}
-			self.exportedKeylines = {}
-			self.importedParallelLines = {}
+		local event = ParallelLinePlacementEvent.new(self.importedParallelLines, self.settings, self.terrainLayer, self.randomseed)
+		if g_currentMission:getIsServer() then
+			-- Enqueue an event (we won't actually send that over the network, but this way we have a consistent interface)
+			ParallelLinePlacementHandler.addPlacementEvent(event)
 		else
-			printf("No parallel lines were imported")
+			-- Send an event to the server. The event will enqueue itself into the same queue as above, once received by the server
+			g_client:getServerConnection():sendEvent(event)
 		end
-	end
-	printf("Finished placing things, except for foliage")
-end
-
-function ConstructionBrushParallelLines:enqueueFoliagePaintEvent(eventTable, coord, params, width)
-	local radius = width * 0.5
-	if params then
-		local foliagePaint = g_currentMission.foliageSystem:getFoliagePaintByName(params.foliageName)
-		local foliageValue = params.value
-		if foliagePaint and foliageValue then
-			local event = LandscapingSculptEvent.new(false, Landscaping.OPERATION.FOLIAGE, coord.x, coord.y, coord.z, nil, nil, nil, nil, nil, nil, radius, 1, Landscaping.BRUSH_SHAPE.CIRCLE, 0, nil, foliagePaint.id, tonumber(foliageValue))
-			table.insert(eventTable, event)
-		end
+		self.keylines = {}
+		self.exportedKeylines = {}
+		self.importedParallelLines = {}
 	end
 end
 
@@ -233,60 +151,18 @@ function ConstructionBrushParallelLines:onButtonTertiary()
 	-- Generate new tree previews
 	TreePreviewManager.removeCurrentPreviewTrees()
 
+	-- Generate and remember a random seed since we are going to calculate the preview on the client and the actual trees on the server
+	-- By transferring the random seed to the server, we can ensure that the actual placement matches the preview
+	self.randomseed = getTimeSec()
+	math.randomseed(self.randomseed)
 
 	for _, coords in ipairs(self.importedParallelLines) do
-		local keylineTreeLoadingData = self:calculateTreeLoadingData(coords)
+		local keylineTreeLoadingData = ParallelLinePlacementHandler.calculateTreeLoadingData(coords, self.settings)
 		for _, data in ipairs(keylineTreeLoadingData) do
 			-- Instead of planting the tree already, show a preview instead
 			TreePreviewManager.enqueueTreePreviewData(data.treeType, data.treeStageIndex, data.variationIndex, data.x, data.y, data.z, data.rotation, data.isGrowing)
 		end
 	end
-end
-
-function ConstructionBrushParallelLines:calculateTreeLoadingData(coordList)
-	local treeLoadingData = {}
-	for i = 1, #coordList do
-		local coord = coordList[i]
-		-- create previews for evenly spaced trees
-		local treeTypeIndex = nil
-		if (i-1) % 32 == 0 and self.settings:isTreeType32Enabled() then
-			treeTypeIndex = self.settings:getTreeType32()
-		elseif (i-1) % 16 == 0 and self.settings:isTreeType16Enabled() then
-			treeTypeIndex = self.settings:getTreeType16()
-		elseif (i-1) % 8 == 0 and self.settings:isTreeType8Enabled() then
-			treeTypeIndex = self.settings:getTreeType8()
-		elseif (i-1) % 4 == 0 and self.settings:isTreeType4Enabled() then
-			treeTypeIndex = self.settings:getTreeType4()
-		elseif (i-1) % 2 == 0 and self.settings:isTreeType2Enabled() then
-			treeTypeIndex = self.settings:getTreeType2()
-		end
-
-		if treeTypeIndex ~= nil then
-			local treeType = g_treePlantManager:getTreeTypeDescFromIndex(treeTypeIndex)
-			if not treeType then
-				Logging.error("Could not find tree type with index %s", treeTypeIndex)
-				continue
-			end
-			local maxTreeStage = math.min(#treeType.stages, self.settings.treeMaxGrowthStage)
-			local minTreeStage = math.min(#treeType.stages, self.settings.treeMinGrowthStage)
-			local treeStageIndex = math.random(minTreeStage, maxTreeStage)
-			local treeStage = treeType.stages[treeStageIndex]
-
-			-- Get a random variation in case the tree has more than one variation
-			-- Note that there is a case where the tree is sapling-only, and the treeType.stages table does not
-			-- contain stages, but rather planter configuration data, which is why we check for at least two stages
-			local maxVariation = #treeStage > 2 and #treeStage or 1
-			local variationIndex = math.random(1, maxVariation)
-
-			-- random rotation to make it look more natural
-			local rotation = math.random() * 2 * math.pi
-
-			local isGrowing = self.settings.treeGrowthBehavior == ParallelLineSettingsDialogTree.TREE_GROWTH_BEHAVIOR.GROWING
-
-			table.insert(treeLoadingData, {treeType = treeType, treeStageIndex = treeStageIndex, variationIndex = variationIndex, rotation = rotation, x = coord.x, y = coord.y, z = coord.z, isGrowing = isGrowing})
-		end
-	end
-	return treeLoadingData
 end
 
 function ConstructionBrushParallelLines:getButtonPrimaryText()

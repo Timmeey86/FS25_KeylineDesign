@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="no"?>
 <modDesc descVersion="99" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/NMC-TBone/xml-schema/main/modDesc.xsd">
     <author>Farmsim Tim</author>
-    <version>0.1.2.0</version>
+    <version>0.1.3.0</version>
     <title>
         <en>Keyline Design (beta)</en>
     </title>
@@ -12,6 +12,8 @@
     <multiplayer supported="true" />
     <extraSourceFiles>
         <sourceFile filename="scripts/KeylineCalculation.lua" />
+        <sourceFile filename="scripts/ParallelLinePlacementHandler.lua" />
+        <sourceFile filename="scripts/events/ParallelLinePlacementEvent.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLines.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelFence.lua" />
         <sourceFile filename="scripts/ConstructionBrushParallelLinesSettings.lua" />

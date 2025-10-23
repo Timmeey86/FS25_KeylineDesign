@@ -138,11 +138,6 @@ function ConstructionBrushParallelFence:onButtonTertiary()
 	end
 end
 
-PlaceableVine.onLoad = Utils.prependedFunction(PlaceableVine.onLoad, function(vine, savegame)
-	print("PlaceableVine:onLoad")
-	printCallstack()
-end)
-
 function ConstructionBrushParallelFence:getButtonPrimaryText()
 	return "3 - Place orchards"
 end

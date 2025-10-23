@@ -43,6 +43,8 @@ function ConstructionBrushParallelLinesSettings.new()
 	self.treeType8 = 1
 	self.treeType4 = 1
 	self.treeType2 = 1
+	self.grassBrushParameters = {}
+	self.bushBrushParameters = {}
 	return self
 end
 
@@ -68,6 +70,70 @@ function ConstructionBrushParallelLinesSettings:applySettings(settings)
 	self.treeType8 = settings.treeType8
 	self.treeType4 = settings.treeType4
 	self.treeType2 = settings.treeType2
+end
+
+---Writes event data to be sent to the server
+---@param streamId number The ID of the network stream
+function ConstructionBrushParallelLinesSettings:sendDataToServer(streamId)
+	streamWriteUInt16(streamId, self.forwardLength)
+	streamWriteUInt16(streamId, self.reverseLength)
+	streamWriteUInt16(streamId, self.headlandWidth)
+	streamWriteUInt16(streamId, self.stripWidth)
+	streamWriteUInt16(streamId, self.keylineWidth)
+
+	streamWriteUInt8(streamId, self.numberOfParallelLinesRight)
+	streamWriteUInt8(streamId, self.numberOfParallelLinesLeft)
+	streamWriteUInt8(streamId, self.grassType)
+	streamWriteUInt8(streamId, self.bushType)
+	streamWriteUInt8(streamId, self.bushWidth)
+	streamWriteUInt8(streamId, self.treeMinGrowthStage)
+	streamWriteUInt8(streamId, self.treeMaxGrowthStage)
+	streamWriteUInt8(streamId, self.treeGrowthBehavior)
+	streamWriteUInt8(streamId, self.treeType32)
+	streamWriteUInt8(streamId, self.treeType16)
+	streamWriteUInt8(streamId, self.treeType8)
+	streamWriteUInt8(streamId, self.treeType4)
+	streamWriteUInt8(streamId, self.treeType2)
+
+	-- Write grass brush parameters
+	streamWriteUInt8(streamId, self.grassBrushParameters.foliageId)
+	streamWriteUInt8(streamId, self.grassBrushParameters.value)
+
+	-- Write bush brush parameters
+	streamWriteUInt8(streamId, self.bushBrushParameters.foliageId)
+	streamWriteUInt8(streamId, self.bushBrushParameters.value)
+end
+
+---Reads event data which was sent from the client
+---@param streamId number The ID of the network stream
+function ConstructionBrushParallelLinesSettings:receiveDataFromClient(streamId)
+	self.forwardLength = streamReadUInt16(streamId)
+	self.reverseLength = streamReadUInt16(streamId)
+	self.headlandWidth = streamReadUInt16(streamId)
+	self.stripWidth = streamReadUInt16(streamId)
+	self.keylineWidth = streamReadUInt16(streamId)
+	
+	self.numberOfParallelLinesRight = streamReadUInt8(streamId)
+	self.numberOfParallelLinesLeft = streamReadUInt8(streamId)
+	self.grassType = streamReadUInt8(streamId)
+	self.bushType = streamReadUInt8(streamId)
+	self.bushWidth = streamReadUInt8(streamId)
+	self.treeMinGrowthStage = streamReadUInt8(streamId)
+	self.treeMaxGrowthStage = streamReadUInt8(streamId)
+	self.treeGrowthBehavior = streamReadUInt8(streamId)
+	self.treeType32 = streamReadUInt8(streamId)
+	self.treeType16 = streamReadUInt8(streamId)
+	self.treeType8 = streamReadUInt8(streamId)
+	self.treeType4 = streamReadUInt8(streamId)
+	self.treeType2 = streamReadUInt8(streamId)
+
+	-- Read grass brush parameters
+	self.grassBrushParameters.foliageId = streamReadUInt8(streamId)
+	self.grassBrushParameters.value = streamReadUInt8(streamId)
+
+	-- Read bush brush parameters
+	self.bushBrushParameters.foliageId = streamReadUInt8(streamId)
+	self.bushBrushParameters.value = streamReadUInt8(streamId)
 end
 
 local instance
